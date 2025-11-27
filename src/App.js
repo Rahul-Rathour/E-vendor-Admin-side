@@ -25,7 +25,7 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
-    <Router>
+    <Router> 
       {/* <Navbar /> */}
       <div className="min-h-screen bg-gray-50">
         <div className="">

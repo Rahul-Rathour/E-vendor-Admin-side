@@ -70,7 +70,7 @@ const ManageProducts = () => {
     });
     setPreview(
       product.image
-        ? `${process.env.REACT_APP_API_URL}/storage/${product.image}`
+        ? `${process.env.REACT_APP_API_URL}/public/${product.image}`
         : null
     );
   };
@@ -140,7 +140,7 @@ const ManageProducts = () => {
             <img
               src={
                 prod.image
-                  ? `${process.env.REACT_APP_API_URL}/storage/${prod.image}`
+                  ? `${process.env.REACT_APP_API_URL}/public/${prod.image}`
                   : "/placeholder.jpg"
               }
               alt={prod.name}

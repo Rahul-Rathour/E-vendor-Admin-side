@@ -112,7 +112,7 @@ const ManageSubcategory = () => {
       name: subcat.name,
       description: subcat.description || "",
     });
-    setPreview(subcat.image ? `${process.env.REACT_APP_API_URL}/storage/${subcat.image}` : null);
+    setPreview(subcat.image ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}` : null);
   };
 
   const handleImageChange = (e) => {
@@ -219,7 +219,7 @@ const ManageSubcategory = () => {
               <img
                 src={
                   subcat.image
-                    ? `${process.env.REACT_APP_API_URL}/storage/${subcat.image}`
+                    ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
                     : "/placeholder.jpg"
                 }
                 alt={subcat.name}

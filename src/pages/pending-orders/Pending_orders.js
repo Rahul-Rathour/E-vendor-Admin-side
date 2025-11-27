@@ -55,7 +55,7 @@ const Pending_orders = () => {
       const response = await api.post(`order/update-status/${id}`, { status: "shipped" });
       if (response.data.status) {
         toast.success("Order marked as shipped!");
-        fetchOrders(); // Refresh the list after update
+        fetchOrders(); // Refresh the list after update 
       } else {
         toast.error("Failed to update order status.");
       }

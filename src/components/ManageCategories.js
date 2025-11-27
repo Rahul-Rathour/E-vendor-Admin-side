@@ -39,7 +39,7 @@ const ManageCategories = () => {
             className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition"
           >
             <img
-              src={`${process.env.REACT_APP_API_URL}/storage/${cat.image}`}
+              src={`${process.env.REACT_APP_API_URL}/public/${cat.image}`}
               alt={cat.image}
               className="h-32 w-full object-cover rounded-md mb-3"
             />

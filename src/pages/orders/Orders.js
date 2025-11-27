@@ -120,7 +120,7 @@ const Orders = () => {
                         to={`/order-details/${order.id}`}
                         className="text-blue-600 hover:text-blue-800 transition duration-300"
                         title="View Order"
-                      >
+                      > 
                         <FaEye size={18} />
                       </Link>
                     </td>
