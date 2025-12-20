@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
+import SidebarMenu from "./SidebarMenu";
 
 const ManageSubcategory = () => {
   const [subcategories, setSubcategories] = useState([]);
@@ -13,6 +14,7 @@ const ManageSubcategory = () => {
   const [preview, setPreview] = useState(null);
   const [editId, setEditId] = useState(null);
   const [message, setMessage] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const token = localStorage.getItem("token");
 
@@ -122,139 +124,154 @@ const ManageSubcategory = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-        Manage Subcategories
-      </h2>
+    <div className="min-h-screen flex bg-gray-50">
 
-      {/* Add / Edit Subcategory Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-5 shadow rounded-lg mb-6 space-y-3"
+      {/* Sidebar */}
+      <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
+
+      {/* Main Content */}
+      <div
+        className={`
+        flex-1 transition-all duration-300
+        ${sidebarOpen ? "ml-64" : "ml-16"}
+        p-4 sm:p-6 lg:p-8
+      `}
       >
-        <select
-          name="category_id"
-          value={formData.category_id}
-          onChange={(e) =>
-            setFormData({ ...formData, category_id: e.target.value })
-          }
-          className="w-full border rounded p-2"
-          required
-        >
-          <option value="">Select Parent Category</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
+            Manage Subcategories
+          </h2>
 
-        <input
-          type="text"
-          placeholder="Subcategory Name"
-          value={formData.name}
-          onChange={(e) =>
-            setFormData({ ...formData, name: e.target.value })
-          }
-          className="w-full border rounded p-2"
-          required
-        />
-
-        <textarea
-          placeholder="Description"
-          value={formData.description}
-          onChange={(e) =>
-            setFormData({ ...formData, description: e.target.value })
-          }
-          className="w-full border rounded p-2"
-        ></textarea>
-
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="w-full border rounded p-2"
-        />
-
-        {preview && (
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-32 h-32 object-cover rounded mt-2"
-          />
-        )}
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {editId ? "Update Subcategory" : "Add Subcategory"}
-        </button>
-
-        {editId && (
-          <button
-            type="button"
-            onClick={resetForm}
-            className="ml-3 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500"
+          {/* Add / Edit Subcategory Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white p-5 shadow rounded-lg mb-6 space-y-3"
           >
-            Cancel Edit
-          </button>
-        )}
-      </form>
+            <select
+              name="category_id"
+              value={formData.category_id}
+              onChange={(e) =>
+                setFormData({ ...formData, category_id: e.target.value })
+              }
+              className="w-full border rounded p-2"
+              required
+            >
+              <option value="">Select Parent Category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
 
-      {message && (
-        <p className="text-center text-green-600 font-medium mb-4">
-          {message}
-        </p>
-      )}
+            <input
+              type="text"
+              placeholder="Subcategory Name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full border rounded p-2"
+              required
+            />
 
-      {/* List Subcategories */}
-      <div className="space-y-4">
-        {subcategories.map((subcat) => (
-          <div
-            key={subcat.id}
-            className="bg-white shadow rounded-lg p-4 flex items-center justify-between"
-          >
-            <div className="flex items-center space-x-4">
+            <textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              className="w-full border rounded p-2"
+            ></textarea>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full border rounded p-2"
+            />
+
+            {preview && (
               <img
-                src={
-                  subcat.image
-                    ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
-                    : "/placeholder.jpg"
-                }
-                alt={subcat.name}
-                className="w-20 h-20 object-cover rounded"
+                src={preview}
+                alt="Preview"
+                className="w-32 h-32 object-cover rounded mt-2"
               />
-              <div>
-                <h3 className="font-semibold text-lg">{subcat.name}</h3>
-                <p className="text-sm text-gray-500">
-                  Category:{" "}
-                  {
-                    categories.find((c) => c.id === subcat.category_id)
-                      ?.name
-                  }
-                </p>
-              </div>
-            </div>
+            )}
 
-            <div className="flex gap-2">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              {editId ? "Update Subcategory" : "Add Subcategory"}
+            </button>
+
+            {editId && (
               <button
-                onClick={() => handleEdit(subcat)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                type="button"
+                onClick={resetForm}
+                className="ml-3 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500"
               >
-                Edit
+                Cancel Edit
               </button>
-              <button
-                onClick={() => handleDelete(subcat.id)}
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+            )}
+          </form>
+
+          {message && (
+            <p className="text-center text-green-600 font-medium mb-4">
+              {message}
+            </p>
+          )}
+
+          {/* List Subcategories */}
+          <div className="space-y-4">
+            {subcategories.map((subcat) => (
+              <div
+                key={subcat.id}
+                className="bg-white shadow rounded-lg p-4 flex items-center justify-between"
               >
-                Delete
-              </button>
-            </div>
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={
+                      subcat.image
+                        ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
+                        : "/placeholder.jpg"
+                    }
+                    alt={subcat.name}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg">{subcat.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      Category:{" "}
+                      {
+                        categories.find((c) => c.id === subcat.category_id)
+                          ?.name
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(subcat)}
+                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(subcat.id)}
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </div>
+    </div >
   );
 };
 

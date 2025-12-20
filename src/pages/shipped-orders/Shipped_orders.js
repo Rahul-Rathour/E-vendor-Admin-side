@@ -15,7 +15,7 @@ const Shipped_orders = () => {
   // Fetch Orders
   const fetchOrders = async () => {
     try {
-      const response = await api.get("orders/shipped/");
+      const response = await api.get("orders/shipped");
       if (response.data.status) {
         setOrders(response.data.data);
         setFilteredOrders(response.data.data);

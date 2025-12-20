@@ -14,7 +14,7 @@ const Delivered_orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await api.get("orders/delivered/");
+        const response = await api.get("orders/delivered");
         if (response.data.status) {
           setOrders(response.data.data);
           setFilteredOrders(response.data.data);

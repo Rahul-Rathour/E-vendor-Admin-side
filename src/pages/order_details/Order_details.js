@@ -65,21 +65,21 @@ const Order_details = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody> 
                                 {orderItems.map((item) => (
                                     <tr key={item.id} className="border-b hover:bg-gray-50 transition">
                                         <td className="px-6 py-4">
                                             <img
-                                                src={`${process.env.REACT_APP_API_URL}/storage/${item.product.image}`}
+                                                src={`${process.env.REACT_APP_API_URL}/public/${item.product.image}`}
                                                 alt={item.product.name}
                                                 className="w-16 h-16 rounded object-cover border"
                                             />
                                         </td>
                                         <td className="px-6 py-4 font-medium text-gray-700">
                                             {item.product.name}
-                                        </td>
+                                        </td> 
                                         <td className="px-6 py-4 text-gray-600">
-                                            {item.product.description}
+                                            {item.product.description} 
                                         </td>
                                         <td className="px-6 py-4 text-center text-gray-700">
                                             {item.quantity}

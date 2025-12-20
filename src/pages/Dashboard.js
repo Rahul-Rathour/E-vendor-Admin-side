@@ -17,6 +17,7 @@ import SidebarMenu from "../components/SidebarMenu";
 import api from "../api";
 
 const Dashboard = () => {
+  const [topProducts, setTopProducts] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [orderStats, setOrderStats] = useState({
@@ -32,11 +33,12 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const [pendingRes, shippedRes, deliveredRes, recentRes] = await Promise.all([
+        const [pendingRes, shippedRes, deliveredRes, recentRes, topDeliveredRes] = await Promise.all([
           api.get("orders/pending"),
           api.get("orders/shipped"),
           api.get("orders/delivered"),
           api.get("recent-orders"),
+          api.get("top-delivered-items"),
         ]);
 
         setOrderStats({
@@ -45,6 +47,15 @@ const Dashboard = () => {
           delivered: deliveredRes.data?.data?.length || 0,
         });
         setRecentOrders(recentRes.data?.data || []);
+
+        // 🔥 Transform backend data → Recharts format
+        const pieFormatted = (topDeliveredRes.data?.data || []).map(item => ({
+          name: item.name,
+          value: Number(item.total_sold),
+        }));
+
+        setTopProducts(pieFormatted);
+
       } catch (error) {
         console.error("Error fetching order data:", error);
       } finally {
@@ -63,12 +74,8 @@ const Dashboard = () => {
     { month: "Apr", Fresh: 40, Cooking: 30, Drinks: 15, Organic: 25 },
   ];
 
-  const pieData = [
-    { name: "Fresh Vegetable", value: 400 },
-    { name: "Cooking Essentials", value: 300 },
-    { name: "Drinks", value: 200 },
-    { name: "Organic Food", value: 100 },
-  ];
+  const pieData = topProducts;
+
 
   const COLORS = ["#22c55e", "#3b82f6", "#f97316", "#10b981"];
 
@@ -156,14 +163,24 @@ const Dashboard = () => {
             <div className="w-full h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius="80%" dataKey="value">
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    dataKey="value"
+                    nameKey="name"
+                    label
+                  >
                     {pieData.map((entry, index) => (
-                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
+
                   <Legend layout="horizontal" verticalAlign="bottom" />
                   <Tooltip />
                 </PieChart>
+
               </ResponsiveContainer>
             </div>
           </div>
