@@ -10,7 +10,7 @@ const Orders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const ordersPerPage = 5;
+  const [ordersPerPage,setOrdersPerPage] = useState(5);
 
   // Fetch Orders
   useEffect(() => {
@@ -68,6 +68,23 @@ const Orders = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600">Rows:</label>
+                        <select
+                            className="flex flex-col sm:flex-row justify-between items-center mb-4"
+                            value={ordersPerPage}
+                            onChange={(e) => {
+                                setOrdersPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                    </div>
 
           <table className="w-full min-w-[600px] text-left text-sm border">
             <thead className="bg-gray-100 text-gray-700">

@@ -97,8 +97,7 @@ const AddSubcategory = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-blue-100 via-white to-blue-50">
-
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-green-100 py-12">
       {/* Sidebar */}
       <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
 
@@ -107,15 +106,16 @@ const AddSubcategory = () => {
         className={`
         flex-1 transition-all duration-300
         ${sidebarOpen ? "ml-64" : "ml-16"}
-        py-12 px-4 sm:px-6 lg:px-10
+        px-4 sm:px-6 md:px-10
         flex justify-center
       `}
       >
-        <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg border border-blue-100">
-          <h2 className="text-2xl font-semibold text-blue-700 mb-6 text-center">
+        <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg border border-green-100">
+          <h2 className="text-2xl font-semibold text-green-700 mb-6 text-center">
             Add New Subcategory
           </h2>
 
+          {/* Message */}
           {message && (
             <p
               className={`text-center mb-4 ${message.toLowerCase().includes("success")
@@ -128,7 +128,7 @@ const AddSubcategory = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Parent Category Dropdown */}
+            {/* Parent Category */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
                 Select Parent Category
@@ -137,7 +137,7 @@ const AddSubcategory = () => {
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleChange}
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300 ${errors.category_id ? "border-red-500" : "border-gray-300"
+                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.category_id ? "border-red-500" : "border-gray-300"
                   }`}
                 required
               >
@@ -166,7 +166,7 @@ const AddSubcategory = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter subcategory name"
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300 ${errors.name ? "border-red-500" : "border-gray-300"
+                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.name ? "border-red-500" : "border-gray-300"
                   }`}
                 required
               />
@@ -186,7 +186,7 @@ const AddSubcategory = () => {
                 onChange={handleChange}
                 placeholder="Enter subcategory description"
                 rows="3"
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300 ${errors.description ? "border-red-500" : "border-gray-300"
+                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.description ? "border-red-500" : "border-gray-300"
                   }`}
               />
               {errors.description && (
@@ -196,7 +196,7 @@ const AddSubcategory = () => {
               )}
             </div>
 
-            {/* Image Upload + Preview */}
+            {/* Image Upload */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
                 Subcategory Image
@@ -205,7 +205,7 @@ const AddSubcategory = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none ${errors.image ? "border-red-500" : "border-gray-300"
+                className={`w-full border rounded-xl px-4 py-2 focus:outline-none ${errors.image ? "border-red-500" : "border-gray-300"
                   }`}
               />
               {errors.image && (
@@ -217,29 +217,29 @@ const AddSubcategory = () => {
                   <img
                     src={preview}
                     alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg border"
+                    className="w-32 h-32 object-cover rounded-xl border shadow-sm"
                   />
                 </div>
               )}
             </div>
 
-            {/* Status Checkbox */}
-            <div className="flex items-center space-x-2">
+            {/* Status */}
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 name="status"
                 checked={formData.status}
                 onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-400"
+                className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-400"
               />
-              <label className="text-gray-700">Active</label>
+              <label className="text-gray-700 font-medium">Active</label>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-300 disabled:opacity-50"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition duration-300 disabled:opacity-50 shadow-md"
             >
               {loading ? "Adding..." : "Add Subcategory"}
             </button>
@@ -248,6 +248,7 @@ const AddSubcategory = () => {
       </div>
     </div>
   );
+
 };
 
 export default AddSubcategory;

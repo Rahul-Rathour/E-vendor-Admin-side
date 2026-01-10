@@ -7,6 +7,7 @@ const ManageProducts = () => {
   const [categories, setCategories] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -47,6 +48,14 @@ const ManageProducts = () => {
     fetchProducts();
     fetchCategories();
   }, []);
+
+
+
+  // Filter products by name (case-insensitive)
+  const filteredProducts = products.filter((prod) =>
+    prod.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   // ✅ Handle input change
   const handleChange = (e) => {
@@ -121,156 +130,193 @@ const ManageProducts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-6">
+    <div className="min-h-screen bg-gray-50">
       <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
+
       <div
-        className={`
-        flex-1 transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-16"}
-        py-10 px-4 sm:px-6 lg:px-10
-      `}
+        className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"
+          } px-6 py-8`}
       >
-        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
           Manage Products
         </h2>
-
-        {message && (
-          <div className="text-center mb-4 text-green-600 font-medium">
-            {message}
-          </div>
-        )}
-
-        {/* Product List */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products.map((prod) => (
-            <div
-              key={prod.id}
-              className="bg-white shadow-md p-4 rounded-xl border border-gray-200 flex flex-col items-center"
-            >
-              <img
-                src={
-                  prod.image
-                    ? `${process.env.REACT_APP_API_URL}/public/${prod.image}`
-                    : "/placeholder.jpg"
-                }
-                alt={prod.name}
-                className="w-24 h-24 object-cover rounded-lg mb-3"
-              />
-              <h3 className="text-lg font-semibold">{prod.name}</h3>
-              <p className="text-gray-500 text-sm mb-1">
-                ₹{prod.price} —{" "}
-                {
-                  categories.find((cat) => cat.id === prod.category_id)?.name ||
-                  "Unknown Category"
-                }
-              </p>
-              <p className="text-gray-500 text-sm">{prod.description}</p>
-
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => handleEdit(prod)}
-                  className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(prod.id)}
-                  className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+        {/* Search Bar */}
+        <div className="max-w-md mx-auto mb-8">
+          <input
+            type="text"
+            placeholder="Search product by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 rounded-xl border border-gray-300
+                       focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
         </div>
 
-        {/* Edit Modal */}
-        {editingProduct && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4 text-center text-green-700">
-                Edit Product
-              </h3>
-              <form onSubmit={handleUpdate} className="space-y-4">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Product name"
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  placeholder="Price"
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Product description"
-                  className="w-full border px-3 py-2 rounded"
-                ></textarea>
+        {/* Message */}
+        {message && (
+          <p className="text-center text-green-600 mb-4">{message}</p>
+        )}
 
-                {/* Category Dropdown */}
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
+        {/* Products Grid */}
+        {filteredProducts.length === 0 ? (
+          <p className="text-center text-gray-500">
+            No products available.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProducts.map((prod) => {
+              const categoryName =
+                categories.find((c) => c.id === prod.category_id)?.name ||
+                "Uncategorized";
+
+              return (
+                <div
+                  key={prod.id}
+                  className="bg-white rounded-2xl border border-gray-200
+                           shadow-sm hover:shadow-xl transition-all"
                 >
-                  <option value="">-- Select Category --</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                  {/* Image */}
+                  <div className="h-56 bg-gray-100 flex items-center justify-center">
+                    <img
+                      src={
+                        prod.image
+                          ? `${process.env.REACT_APP_API_URL}/public/${prod.image}`
+                          : "/placeholder.jpg"
+                      }
+                      alt={prod.name}
+                      className="h-full object-contain"
+                    />
+                  </div>
 
-                {/* Image Upload */}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full"
-                />
-                {preview && (
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover mt-2 rounded"
-                  />
-                )}
+                  {/* Content */}
+                  <div className="p-5">
+                    <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                      {categoryName}
+                    </span>
 
-                <div className="flex justify-between mt-4">
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                  >
-                    Update
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingProduct(null)}
-                    className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                  >
-                    Cancel
-                  </button>
+                    <h3 className="mt-2 text-lg font-semibold text-gray-800">
+                      {prod.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      {prod.description}
+                    </p>
+
+                    <div className="mt-4 text-xl font-bold text-gray-900">
+                      ₹{prod.price}
+                    </div>
+
+                    <div className="mt-5 flex gap-3">
+                      <button
+                        onClick={() => handleEdit(prod)}
+                        className="flex-1 border border-blue-500 text-blue-600
+                                 py-2 rounded-lg hover:bg-blue-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(prod.id)}
+                        className="flex-1 border border-red-500 text-red-600
+                                 py-2 rounded-lg hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </form>
-            </div>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* ================= EDIT MODAL ================= */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Edit Product
+            </h3>
+
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Product Name"
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                placeholder="Price"
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              />
+
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Description"
+                rows="3"
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+              />
+
+              <select
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleChange}
+                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
+              <input type="file" onChange={handleImageChange} />
+
+              {preview && (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg mt-2"
+                />
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* =============== END EDIT MODAL =============== */}
     </div>
   );
+
 };
 
 export default ManageProducts;

@@ -124,36 +124,38 @@ const ManageSubcategory = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
 
       {/* Main Content */}
       <div
-        className={`
-        flex-1 transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-16"}
-        p-4 sm:p-6 lg:p-8
-      `}
+        className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"
+          } px-6 py-8`}
       >
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-            Manage Subcategories
-          </h2>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
+          Manage Subcategories
+        </h2>
 
-          {/* Add / Edit Subcategory Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white p-5 shadow rounded-lg mb-6 space-y-3"
-          >
+        {/* Message */}
+        {message && (
+          <p className="text-center text-green-600 mb-4">{message}</p>
+        )}
+
+        {/* Add / Edit Form */}
+        <div className="max-w-3xl mx-auto mb-10 bg-white p-6 rounded-2xl shadow border">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            {editId ? "Edit Subcategory" : "Add New Subcategory"}
+          </h3>
+
+          <form onSubmit={handleSubmit} className="grid gap-4">
             <select
               name="category_id"
               value={formData.category_id}
               onChange={(e) =>
                 setFormData({ ...formData, category_id: e.target.value })
               }
-              className="w-full border rounded p-2"
+              className="w-full border rounded-lg px-4 py-2"
               required
             >
               <option value="">Select Parent Category</option>
@@ -171,7 +173,7 @@ const ManageSubcategory = () => {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full border rounded p-2"
+              className="w-full border rounded-lg px-4 py-2"
               required
             />
 
@@ -181,98 +183,112 @@ const ManageSubcategory = () => {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full border rounded p-2"
-            ></textarea>
+              className="w-full border rounded-lg px-4 py-2"
+              rows="3"
+            />
 
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full border rounded p-2"
+              className="w-full border rounded-lg px-4 py-2"
             />
 
             {preview && (
               <img
                 src={preview}
                 alt="Preview"
-                className="w-32 h-32 object-cover rounded mt-2"
+                className="w-32 h-32 object-cover rounded-lg border"
               />
             )}
 
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              {editId ? "Update Subcategory" : "Add Subcategory"}
-            </button>
-
-            {editId && (
+            <div className="flex gap-3">
               <button
-                type="button"
-                onClick={resetForm}
-                className="ml-3 bg-gray-400 text-white px-3 py-2 rounded hover:bg-gray-500"
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition"
               >
-                Cancel Edit
+                {editId ? "Update Subcategory" : "Add Subcategory"}
               </button>
-            )}
+
+              {editId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg transition"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </form>
+        </div>
 
-          {message && (
-            <p className="text-center text-green-600 font-medium mb-4">
-              {message}
-            </p>
-          )}
+        {/* Subcategories Grid */}
+        {subcategories.length === 0 ? (
+          <p className="text-center text-gray-500">No subcategories found.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {subcategories.map((subcat) => {
+              const categoryName =
+                categories.find((c) => c.id === subcat.category_id)?.name ||
+                "Uncategorized";
 
-          {/* List Subcategories */}
-          <div className="space-y-4">
-            {subcategories.map((subcat) => (
-              <div
-                key={subcat.id}
-                className="bg-white shadow rounded-lg p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={
-                      subcat.image
-                        ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
-                        : "/placeholder.jpg"
-                    }
-                    alt={subcat.name}
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-lg">{subcat.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      Category:{" "}
-                      {
-                        categories.find((c) => c.id === subcat.category_id)
-                          ?.name
+              return (
+                <div
+                  key={subcat.id}
+                  className="bg-white rounded-2xl border shadow-sm hover:shadow-xl transition"
+                >
+                  {/* Image */}
+                  <div className="h-48 bg-gray-100 flex items-center justify-center">
+                    <img
+                      src={
+                        subcat.image
+                          ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
+                          : "/placeholder.jpg"
                       }
+                      alt={subcat.name}
+                      className="h-full object-contain"
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                      {categoryName}
+                    </span>
+
+                    <h3 className="mt-2 text-lg font-semibold text-gray-800">
+                      {subcat.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      {subcat.description || "No description"}
                     </p>
+
+                    <div className="mt-5 flex gap-3">
+                      <button
+                        onClick={() => handleEdit(subcat)}
+                        className="flex-1 border border-yellow-500 text-yellow-600 py-2 rounded-lg hover:bg-yellow-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(subcat.id)}
+                        className="flex-1 border border-red-500 text-red-600 py-2 rounded-lg hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(subcat)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(subcat.id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
-    </div >
+    </div>
   );
+
 };
 
 export default ManageSubcategory;

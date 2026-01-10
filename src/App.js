@@ -16,6 +16,7 @@ import Orders from "./pages/orders/Orders";
 import Pending_orders from "./pages/pending-orders/Pending_orders";
 import Shipped_orders from "./pages/shipped-orders/Shipped_orders";
 import Delivered_orders from "./pages/delivered-orders/Delivered-orders";
+import Cancelled_orders from "./pages/cancelled_orders/Cancelled_orders";
 import Order_details from "./pages/order_details/Order_details";
 
 function ProtectedRoute({ children }) {
@@ -93,6 +94,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Delivered_orders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cancelled-orders"
+              element={
+                <ProtectedRoute>
+                  <Cancelled_orders />
                 </ProtectedRoute>
               }
             />

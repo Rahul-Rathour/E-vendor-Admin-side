@@ -126,181 +126,196 @@ const AddProduct = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-green-100 py-12">
+    <div className="min-h-screen bg-gray-100">
       <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
+
       <div
-        className={`
-        flex-1 transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-16"}
-        px-4 sm:px-6 md:px-10 
-        flex justify-center
-      `}
+        className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"
+          } px-6 py-10 flex justify-center`}
       >
-        <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg border border-green-100">
-          <h2 className="text-2xl font-semibold text-green-700 mb-6 text-center">
-            Add New Product
-          </h2>
+        <div className="w-full max-w-2xl">
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
 
-          {message && (
-            <p
-              className={`text-center mb-4 ${message.toLowerCase().includes("success")
-                ? "text-green-600"
-                : "text-red-600"
-                }`}
-            >
-              {message}
-            </p>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Product Name */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Product Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter product name"
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-green-300 ${errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
-                required
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>
-              )}
+            {/* Header */}
+            <div className="border-b px-8 py-6">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Add New Product
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Fill in the details below to add a new product
+              </p>
             </div>
 
-            {/* Price */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Price
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="Enter price"
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-green-300 ${errors.price ? "border-red-500" : "border-gray-300"
-                  }`}
-                required
-              />
-              {errors.price && (
-                <p className="text-red-500 text-sm mt-1">{errors.price[0]}</p>
-              )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Enter product description"
-                rows="3"
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-green-300 ${errors.description ? "border-red-500" : "border-gray-300"
-                  }`}
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description[0]}
+            {/* Body */}
+            <div className="px-8 py-6">
+              {message && (
+                <p
+                  className={`mb-4 text-sm ${message.toLowerCase().includes("success")
+                      ? "text-green-600"
+                      : "text-red-600"
+                    }`}
+                >
+                  {message}
                 </p>
               )}
-            </div>
 
-            {/* Category */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Select Category
-              </label>
-              <select
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleChange}
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none ${errors.category_id ? "border-red-500" : "border-gray-300"
-                  }`}
-                required
-              >
-                <option value="">-- Select Category --</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <form onSubmit={handleSubmit} className="space-y-6">
 
-            {/* Subcategory */}
-            {formData.category_id && (
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Select Subcategory
-                </label>
-                <select
-                  name="subcategory_id"
-                  value={formData.subcategory_id}
-                  onChange={handleChange}
-                  className={`w-full border rounded-lg px-4 py-2 focus:outline-none ${errors.subcategory_id ? "border-red-500" : "border-gray-300"
-                    }`}
+                {/* Product Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Apple iPhone 15"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3
+                             focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    required
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.name[0]}
+                    </p>
+                  )}
+                </div>
 
-                >
-                  <option value="">-- Select Subcategory --</option>
-                  {subcategories.map((sub) => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.subcategory_id && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.subcategory_id[0]}
-                  </p>
-                )}
-              </div>
-            )}
+                {/* Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    placeholder="₹ 999"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3
+                             focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    required
+                  />
+                  {errors.price && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.price[0]}
+                    </p>
+                  )}
+                </div>
 
-            {/* Image */}
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Product Image
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className={`w-full border rounded-lg px-4 py-2 focus:outline-none ${errors.image ? "border-red-500" : "border-gray-300"
-                  }`}
-              />
-              {preview && (
-                <div className="mt-3">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg border"
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Short product description"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3
+                             focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
-              )}
-            </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition duration-300 disabled:opacity-50"
-            >
-              {loading ? "Adding..." : "Add Product"}
-            </button>
-          </form>
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    name="category_id"
+                    value={formData.category_id}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3
+                             focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    required
+                  >
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Subcategory */}
+                {formData.category_id && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Subcategory
+                    </label>
+                    <select
+                      name="subcategory_id"
+                      value={formData.subcategory_id}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3
+                               focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="">Select subcategory</option>
+                      {subcategories.map((sub) => (
+                        <option key={sub.id} value={sub.id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Image
+                  </label>
+
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                      id="productImage"
+                    />
+                    <label
+                      htmlFor="productImage"
+                      className="cursor-pointer text-sm text-green-600 font-medium"
+                    >
+                      Click to upload image
+                    </label>
+
+                    {preview && (
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="mx-auto mt-4 w-32 h-32 object-cover rounded-xl border"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-green-600 hover:bg-green-700
+                           text-white font-semibold py-3 rounded-xl
+                           transition disabled:opacity-50"
+                >
+                  {loading ? "Adding Product..." : "Add Product"}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+
 };
 
 export default AddProduct;

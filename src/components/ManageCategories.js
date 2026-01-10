@@ -21,65 +21,101 @@ const ManageCategories = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    await api.delete(`delete-category/${id}`);
-    fetchCategories();
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this category? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`delete-category/${id}`);
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      alert("Failed to delete category. Please try again.");
+    }
   };
 
 
 
-  return (
-    <div className="min-h-screen flex bg-gray-50">
 
+  return (
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
 
       {/* Main Content */}
       <div
-        className={`
-        flex-1 transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-16"}
-        p-4 sm:p-6 lg:p-8
-      `}
+        className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"
+          } px-6 py-8`}
       >
-        <h2 className="text-2xl font-semibold mb-6 text-blue-600">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
           Manage Categories
         </h2>
 
-        {/* Categories List */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition"
-            >
-              <img
-                src={`${process.env.REACT_APP_API_URL}/public/${cat.image}`}
-                alt={cat.image}
-                className="h-32 w-full object-cover rounded-md mb-3"
-              />
-              <h3 className="text-lg font-semibold">{cat.name}</h3>
-              <p className="text-gray-500 text-sm mb-3">{cat.description}</p>
-              <p className="text-sm text-blue-600 font-medium">
-                Subcategories: {cat.subcategories ? cat.subcategories.length : 0}
-              </p>
-              <button
-                onClick={() => navigate(`/update-category/${cat.id}`)}
-                className="mt-3 bg-blue-500 text-white px-4 py-1 rounded hover:bg-red-600"
+        {/* Categories Grid */}
+        {categories.length === 0 ? (
+          <p className="text-center text-gray-500">
+            No categories available.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className="bg-white rounded-2xl border border-gray-200
+                         shadow-sm hover:shadow-xl transition-all"
               >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(cat.id)}
-                className="mt-3 bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+                {/* Image */}
+                <div className="h-56 bg-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
+                  <img
+                    src={`${process.env.REACT_APP_API_URL}/public/${cat.image}`}
+                    alt={cat.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {cat.name}
+                  </h3>
+
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                    {cat.description}
+                  </p>
+
+                  <p className="mt-3 text-sm font-medium text-green-600">
+                    Subcategories:{" "}
+                    {cat.subcategories ? cat.subcategories.length : 0}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="mt-5 flex gap-3">
+                    <button
+                      onClick={() => navigate(`/update-category/${cat.id}`)}
+                      className="flex-1 border border-blue-500 text-blue-600
+                               py-2 rounded-lg hover:bg-blue-50 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id)}
+                      className="flex-1 border border-red-500 text-red-600
+                               py-2 rounded-lg hover:bg-red-50 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
+
 };
 
 export default ManageCategories;
