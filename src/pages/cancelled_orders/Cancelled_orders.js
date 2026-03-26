@@ -50,12 +50,11 @@ const Cancelled_orders = () => {
     return (
         <div className="flex bg-gray-50 min-h-screen relative">
             {/* Sidebar */}
-            <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
+            {/* <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} /> */}
 
             {/* Dashboard Content */}
             <div
-                className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8 ${sidebarOpen ? "ml-60" : "ml-16"
-                    }`}
+                className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8`}
             >
                 <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
                     <div className="flex flex-col sm:flex-row justify-between items-center mb-4">

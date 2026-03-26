@@ -28,12 +28,11 @@ const Order_details = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Sidebar */}
-            <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
+            {/* <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} /> */}
 
             {/* Main Content */}
             <div
-                className={`transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-16"
-                    } px-6 py-8`}
+                className={`transition-all duration-300 px-6 py-8`}
             >
                 {/* Header */}
                 <div className="max-w-6xl mx-auto mb-6">

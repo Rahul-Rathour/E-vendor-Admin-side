@@ -10,7 +10,7 @@ const Pending_orders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const ordersPerPage = 5;
+  const [ordersPerPage, setOrdersPerPage] = useState(5);
 
   // Fetch Orders
   const fetchOrders = async () => {
@@ -68,13 +68,11 @@ const Pending_orders = () => {
   return (
     <div className="flex bg-gray-50 min-h-screen relative">
       {/* Sidebar */}
-      <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
+      {/* <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} /> */}
 
       {/* Dashboard Content */}
       <div
-        className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8 ${
-          sidebarOpen ? "ml-60" : "ml-16"
-        }`}
+        className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8`}
       >
         <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
@@ -86,6 +84,23 @@ const Pending_orders = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Rows:</label>
+            <select
+              className="flex flex-col sm:flex-row justify-between items-center mb-4"
+              value={ordersPerPage}
+              onChange={(e) => {
+                setOrdersPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </div>
 
           <table className="w-full min-w-[600px] text-left text-sm border">
@@ -118,13 +133,12 @@ const Pending_orders = () => {
                     <td className="py-3 px-4">{order.shipping_address}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          order.delivery_status === "pending"
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${order.delivery_status === "pending"
                             ? "bg-yellow-100 text-yellow-700"
                             : order.delivery_status === "shipped"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
                       >
                         {order.delivery_status}
                       </span>
@@ -167,11 +181,10 @@ const Pending_orders = () => {
                 <button
                   key={index + 1}
                   onClick={() => handlePageChange(index + 1)}
-                  className={`px-3 py-1 rounded-md border ${
-                    currentPage === index + 1
+                  className={`px-3 py-1 rounded-md border ${currentPage === index + 1
                       ? "bg-blue-500 text-white"
                       : "bg-white text-gray-600 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   {index + 1}
                 </button>

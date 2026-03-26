@@ -8,7 +8,7 @@ const Delivered_orders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const ordersPerPage = 5;
+  const [ordersPerPage,setOrdersPerPage] = useState(5);
 
   // Fetch Orders
   useEffect(() => {
@@ -48,13 +48,11 @@ const Delivered_orders = () => {
   return (
     <div className="flex bg-gray-50 min-h-screen relative">
       {/* Sidebar */}
-      <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
+      {/* <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} /> */}
 
       {/* Dashboard Content */}
       <div
-        className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8 ${
-          sidebarOpen ? "ml-60" : "ml-16"
-        }`}
+        className={`flex-1 transition-all duration-500 p-4 sm:p-6 md:p-8`}
       >
         <div className="bg-white p-6 rounded-xl shadow overflow-x-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
@@ -66,6 +64,23 @@ const Delivered_orders = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Rows:</label>
+            <select
+              className="flex flex-col sm:flex-row justify-between items-center mb-4"
+              value={ordersPerPage}
+              onChange={(e) => {
+                setOrdersPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </div>
 
           <table className="w-full min-w-[600px] text-left text-sm border">

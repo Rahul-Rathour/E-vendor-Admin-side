@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaEye } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import linechart from "../images/line.png"
 import {
   BarChart,
   PieChart,
@@ -13,8 +12,7 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-} from "recharts";
-import SidebarMenu from "../components/SidebarMenu";
+} from "recharts"; 
 import api from "../api";
 
 const Dashboard = () => {
@@ -28,35 +26,36 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch order data from backend
+  // Fetch order data
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
 
-        const [pendingRes, shippedRes, deliveredRes, recentRes, topDeliveredRes] = await Promise.all([
-          api.get("orders/pending"),
-          api.get("orders/shipped"),
-          api.get("orders/delivered"),
-          api.get("recent-orders"),
-          api.get("top-delivered-items"),
-        ]);
+        const [pendingRes, shippedRes, deliveredRes, recentRes, topDeliveredRes] =
+          await Promise.all([
+            api.get("orders/pending"),
+            api.get("orders/shipped"),
+            api.get("orders/delivered"),
+            api.get("recent-orders"),
+            api.get("top-delivered-items"),
+          ]);
 
         setOrderStats({
           pending: pendingRes.data?.data?.length || 0,
           shipped: shippedRes.data?.data?.length || 0,
           delivered: deliveredRes.data?.data?.length || 0,
         });
+
         setRecentOrders(recentRes.data?.data || []);
 
-        // 🔥 Transform backend data → Recharts format
-        const pieFormatted = (topDeliveredRes.data?.data || []).map(item => ({
+        // Format for pie chart
+        const formatted = (topDeliveredRes.data?.data || []).map((item) => ({
           name: item.name,
           value: Number(item.total_sold),
         }));
 
-        setTopProducts(pieFormatted);
-
+        setTopProducts(formatted);
       } catch (error) {
         console.error("Error fetching order data:", error);
       } finally {
@@ -67,7 +66,6 @@ const Dashboard = () => {
     fetchOrders();
   }, []);
 
-  // Example Chart Data
   const barData = [
     { month: "Jan", Fresh: 10, Cooking: 20, Drinks: 30, Organic: 15 },
     { month: "Feb", Fresh: 25, Cooking: 15, Drinks: 10, Organic: 20 },
@@ -77,113 +75,23 @@ const Dashboard = () => {
 
   const pieData = topProducts;
 
-
-  const COLORS = ["#22c55e", "#3b82f6", "#f97316", "#10b981"];
+  const PALETTE = ["#4F46E5", "#10B981", "#3B82F6", "#6B7280"];
 
   return (
-    <div className="flex bg-slate-100 min-h-screen">
-      {/* Sidebar */}
-      <SidebarMenu onToggle={(isOpen) => setSidebarOpen(isOpen)} />
-
-      {/* Dashboard Content */}
+    <div className="flex bg-slate-100 min-h-screen overflow-x-hidden w-full">
       <div
-        className={`flex-1 transition-all duration-500 px-6 py-6 ${sidebarOpen ? "ml-60" : "ml-16"
-          }`}
+        className={`flex-1 transition-all duration-500 px-4 sm:px-6 py-6 w-full max-w-full`}
       >
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-800">
             Dashboard Overview
           </h1>
-          <p className="text-gray-500 text-sm">
-            Welcome back, Admin 👋
-          </p>
+          <p className="text-gray-500 text-sm">Welcome back, Admin 👋</p>
         </div>
 
-        {/* Top Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-
-          {/* CARD 1 */}
-          <div className="relative p-4 rounded-lg bg-gradient-to-r from-[#4c8df5] to-[#8ce0ff] text-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] min-h-[120px]">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-semibold">$2156</h2>
-                <p className="text-xs opacity-90 mt-0.5">Total Tax</p>
-              </div>
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 opacity-90"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="white"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-
-            <div className="mt-3">
-              <img
-                src={linechart}
-                alt="chart"
-                className="w-full h-10  opacity-100"
-              />
-            </div>
-          </div>
-
-          {/* CARD 2 */}
-          <div className="relative p-4 rounded-lg shadow-md bg-gradient-to-r from-pink-500 to-orange-400 text-white min-h-[120px]">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-semibold">$1567</h2>
-                <p className="text-xs opacity-90 mt-0.5">Total Earning</p>
-              </div>
-              <span className="text-xl opacity-90">📦</span>
-            </div>
-
-            <div className="mt-3">
-              <img src={linechart} alt="chart" className="w-full h-10  opacity-100" />
-            </div>
-          </div>
-
-          {/* CARD 3 */}
-          <div className="relative p-4 rounded-lg shadow-md bg-gradient-to-r from-green-500 to-teal-400 text-white min-h-[120px]">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-semibold">$4566</h2>
-                <p className="text-xs opacity-90 mt-0.5">Total Sales</p>
-              </div>
-              <span className="text-xl opacity-90">⚗️</span>
-            </div>
-
-            <div className="mt-3">
-              <img src={linechart} alt="chart" className="w-full h-10  opacity-100" />
-            </div>
-          </div>
-
-          {/* CARD 4 */}
-          <div className="relative p-4 rounded-lg shadow-md bg-gradient-to-r from-purple-500 to-pink-500 text-white min-h-[120px]">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-semibold">$4566</h2>
-                <p className="text-xs opacity-90 mt-0.5">Total Sales</p>
-              </div>
-              <span className="text-xl opacity-90">$</span>
-            </div>
-
-            <div className="mt-3">
-              <img src={linechart} alt="chart" className="w-full h-10  opacity-100" />
-            </div>
-          </div>
-
-        </div>
-
-
-
-        {/* Order Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-5 mb-10">
-
+        {/* Order Stats (Premium White Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {[
             {
               label: "Total Orders",
@@ -191,43 +99,29 @@ const Dashboard = () => {
                 orderStats.pending +
                 orderStats.shipped +
                 orderStats.delivered,
-              gradient: "from-[#4c8df5] to-[#8ce0ff]", // blue → cyan
             },
-            {
-              label: "Pending",
-              value: orderStats.pending,
-              gradient: "from-pink-500 to-orange-400", // pink → orange
-            },
-            {
-              label: "Shipping",
-              value: orderStats.shipped,
-              gradient: "from-green-500 to-teal-400", // green → teal
-            },
-            {
-              label: "Delivered",
-              value: orderStats.delivered,
-              gradient: "from-purple-500 to-pink-500", // purple → pink
-            },
+            { label: "Pending", value: orderStats.pending },
+            { label: "Shipping", value: orderStats.shipped },
+            { label: "Delivered", value: orderStats.delivered },
           ].map((stat, i) => (
             <div
               key={i}
-              className={`relative p-4 rounded-lg bg-gradient-to-r ${stat.gradient} text-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] min-h-[110px] flex flex-col justify-center`}
+              className="p-5 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition"
             >
-              <p className="text-sm opacity-90">{stat.label}</p>
-
-              <h3 className="text-xl font-semibold mt-1">
+              <p className="text-xs uppercase tracking-wide text-gray-500">
+                {stat.label}
+              </p>
+              <h3 className="text-2xl font-semibold mt-1 text-gray-800">
                 {loading ? "…" : stat.value}
               </h3>
             </div>
           ))}
-
         </div>
-
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
           {/* Bar Chart */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h3 className="font-semibold text-gray-700 mb-4">
               Conversions This Year
             </h3>
@@ -235,46 +129,22 @@ const Dashboard = () => {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData}>
-                  {/* Gradient Definitions */}
-                  <defs>
-                    <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7C3AED" />
-                      <stop offset="100%" stopColor="#6366F1" />
-                    </linearGradient>
-
-                    <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3B82F6" />
-                      <stop offset="100%" stopColor="#0EA5E9" />
-                    </linearGradient>
-
-                    <linearGradient id="gradSky" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0EA5E9" />
-                      <stop offset="100%" stopColor="#06B6D4" />
-                    </linearGradient>
-
-                    <linearGradient id="gradPink" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#D946EF" />
-                      <stop offset="100%" stopColor="#F43F5E" />
-                    </linearGradient>
-                  </defs>
-
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis dataKey="month" stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
                   <Tooltip />
                   <Legend />
 
-                  {/* Apply gradients here */}
-                  <Bar dataKey="Fresh" stackId="a" fill="url(#gradPurple)" />
-                  <Bar dataKey="Cooking" stackId="a" fill="url(#gradBlue)" />
-                  <Bar dataKey="Drinks" stackId="a" fill="url(#gradSky)" />
-                  <Bar dataKey="Organic" stackId="a" fill="url(#gradPink)" />
+                  <Bar dataKey="Fresh" fill="#4F46E5" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Cooking" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Drinks" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Organic" fill="#6B7280" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Pie Chart */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h3 className="font-semibold text-gray-700 mb-4">
               Top Revenue Products
             </h3>
@@ -282,50 +152,17 @@ const Dashboard = () => {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  {/* Pie gradients */}
-                  <defs>
-                    <linearGradient id="piePurple" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#7C3AED" />
-                      <stop offset="100%" stopColor="#6366F1" />
-                    </linearGradient>
-
-                    <linearGradient id="pieBlue" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#3B82F6" />
-                      <stop offset="100%" stopColor="#0EA5E9" />
-                    </linearGradient>
-
-                    <linearGradient id="pieSky" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#06B6D4" />
-                      <stop offset="100%" stopColor="#0EA5E9" />
-                    </linearGradient>
-
-                    <linearGradient id="piePink" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#D946EF" />
-                      <stop offset="100%" stopColor="#F43F5E" />
-                    </linearGradient>
-                  </defs>
-
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
                     outerRadius={90}
                     dataKey="value"
-                    label
                   >
                     {pieData.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={[
-                          "url(#piePurple)",
-                          "url(#pieBlue)",
-                          "url(#pieSky)",
-                          "url(#piePink)",
-                        ][i % 4]}
-                      />
+                      <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
                     ))}
                   </Pie>
-
                   <Legend verticalAlign="bottom" />
                   <Tooltip />
                 </PieChart>
@@ -334,16 +171,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-
         {/* Recent Orders */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 overflow-x-auto">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-x-auto">
           <h3 className="font-semibold text-gray-700 mb-4">
             Recent Orders
           </h3>
 
-          <table className="w-full min-w-[700px] text-sm">
-            <thead className="border-b">
-              <tr className="text-gray-500 text-left">
+          <table className="w-full min-w-[700px] text-sm text-gray-700">
+            <thead className="border-b bg-gray-50 text-gray-500">
+              <tr>
                 <th className="py-3">Order</th>
                 <th>Date</th>
                 <th>Address</th>
@@ -370,9 +206,7 @@ const Dashboard = () => {
                     key={order.id}
                     className="border-b hover:bg-gray-50 transition"
                   >
-                    <td className="py-3">
-                      {order.order_number || "-"}
-                    </td>
+                    <td className="py-3">{order.order_number || "-"}</td>
                     <td>
                       {order.created_at
                         ? new Date(order.created_at).toDateString()
@@ -412,7 +246,6 @@ const Dashboard = () => {
       </div>
     </div>
   );
-
 };
 
 export default Dashboard;

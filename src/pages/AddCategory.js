@@ -74,13 +74,12 @@ const AddCategory = () => {
   return (
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-green-100 py-12">
       {/* Sidebar */}
-      <SidebarMenu onToggle={(open) => setSidebarOpen(open)} />
+      {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */}
 
       {/* Main Content */}
-      <div
+      <div 
         className={`
         flex-1 transition-all duration-300
-        ${sidebarOpen ? "ml-64" : "ml-16"}
         px-4 sm:px-6 md:px-10
         flex justify-center
       `}
