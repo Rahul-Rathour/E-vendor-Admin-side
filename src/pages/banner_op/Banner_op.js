@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api";
-import SidebarMenu from "../../components/SidebarMenu";
+import { toast } from "react-toastify";
 
 const Banner_op = () => {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
-const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [editId, setEditId] = useState(null);
-
-  const [showModal, setShowModal] = useState(false);
 
   // Load banners
   const fetchBanners = async () => {
@@ -19,6 +18,7 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
       setBanners(res.data.data || []);
     } catch (error) {
       console.error("Error fetching banners:", error);
+      toast.error("Failed to load banners");
     }
     setLoading(false);
   };
@@ -27,19 +27,19 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
     fetchBanners();
   }, []);
 
-  // Preview image
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
-  // Create or Update submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!image && !editId) {
-      alert("Please upload an image");
+      toast.error("Please select an image");
       return;
     }
 
@@ -49,23 +49,21 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
     try {
       if (editId) {
         await api.post(`banners/${editId}`, formData);
-        alert("Banner updated successfully");
+        toast.success("Banner updated successfully!");
       } else {
         await api.post("banners", formData);
-        alert("Banner created successfully");
+        toast.success("Banner created successfully!");
       }
 
       resetForm();
       fetchBanners();
       setShowModal(false);
-
     } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong");
+      console.error(error);
+      toast.error("Something went wrong");
     }
   };
 
-  // Edit banner
   const handleEdit = (banner) => {
     setEditId(banner.id);
     setPreview(`${process.env.REACT_APP_API_URL}/public/${banner.image}`);
@@ -73,143 +71,165 @@ const [sidebarOpen, setSidebarOpen] = useState(true);
     setShowModal(true);
   };
 
-  // Delete banner
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this banner?")) return;
     try {
       await api.delete(`banners/${id}`);
+      toast.success("Banner deleted successfully!");
       fetchBanners();
     } catch (error) {
-      console.error(error);
-      alert("Failed to delete");
+      toast.error("Failed to delete banner");
     }
   };
 
-  // Reset modal/form
   const resetForm = () => {
     setEditId(null);
     setImage(null);
     setPreview(null);
   };
 
-  if (loading)
-    return <p className="text-center mt-20 text-gray-600">Loading banners...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
+        <p className="text-orange-600 text-xl">Loading banners...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */} 
-      <div className={`transition-all duration-300 px-6 py-8`}>
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
+          <h1 className="text-4xl font-bold">Manage Banners</h1>
+          <p className="text-orange-100 mt-2">Upload and manage homepage banners</p>
+        </div>
 
-        {/* Header with Add button */}
-        <div className="flex justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
-          Manage Banners
-        </h2>
+        {/* Add Button */}
+        <div className="flex justify-end mb-6">
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow"
             onClick={() => {
               resetForm();
               setShowModal(true);
             }}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 shadow-lg"
           >
-            + Add New
+            + Add New Banner
           </button>
         </div>
 
-        {/* ---------- TABLE OF BANNERS ---------- */}
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Banner Image</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {banners.map((banner) => (
-                <tr key={banner.id} className="border-b hover:bg-gray-50">
-
-                  <td className="px-4 py-3">{banner.id}</td>
-
-                  <td className="px-4 py-3">
-                    <img
-                      src={`${process.env.REACT_APP_API_URL}/public/${banner.image}`}
-                      className="w-40 h-20 object-cover rounded border"
-                      alt="banner"
-                    />
-                  </td>
-
-                  <td className="px-4 py-3 flex gap-3">
-                    <button
-                      className="bg-green-600 text-white px-3 py-1 rounded"
-                      onClick={() => handleEdit(banner)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-red-600 text-white px-3 py-1 rounded"
-                      onClick={() => handleDelete(banner.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-
+        {/* Banners Table */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-orange-50">
+                <tr>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">ID</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Banner Image</th>
+                  <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y">
+                {banners.map((banner) => (
+                  <tr key={banner.id} className="hover:bg-orange-50 transition">
+                    <td className="px-6 py-5 font-medium text-gray-700">#{banner.id}</td>
+                    <td className="px-6 py-5">
+                      <img
+                        src={`${process.env.REACT_APP_API_URL}/public/${banner.image}`}
+                        alt="Banner"
+                        className="w-64 h-32 object-cover rounded-2xl border shadow-sm"
+                      />
+                    </td>
+                    <td className="px-8 py-5 text-center flex justify-center gap-4">
+                      <button
+                        onClick={() => handleEdit(banner)}
+                        className="text-blue-600 hover:text-blue-700 text-2xl hover:scale-110 transition"
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(banner.id)}
+                        className="text-red-600 hover:text-red-700 text-2xl hover:scale-110 transition"
+                        title="Delete"
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {banners.length === 0 && (
+                  <tr>
+                    <td colSpan="3" className="text-center py-16 text-gray-500">
+                      No banners found. Add your first banner.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
 
-        {/* ---------- MODAL FOR ADD / EDIT ---------- */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-xl w-96 shadow-xl">
-
-              <h2 className="text-xl font-bold mb-4">
+      {/* ====================== ADD / EDIT MODAL ====================== */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-6">
+              <h3 className="text-2xl font-bold">
                 {editId ? "Edit Banner" : "Add New Banner"}
-              </h2>
+              </h3>
+            </div>
 
-              <form onSubmit={handleSubmit} className="grid gap-4">
-
+            {/* Modal Body */}
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Banner Image
+                </label>
                 <input
                   type="file"
                   accept="image/*"
-                  className="border p-2 rounded"
                   onChange={handleImageChange}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
                 />
+              </div>
 
-                {preview && (
+              {preview && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600 mb-2">Preview:</p>
                   <img
                     src={preview}
-                    alt="preview"
-                    className="w-full h-40 object-cover border rounded"
+                    alt="Preview"
+                    className="w-full h-52 object-cover rounded-2xl border shadow"
                   />
-                )}
+                </div>
+              )}
 
-                <button className="bg-blue-600 text-white py-2 rounded">
-                  {editId ? "Update Banner" : "Create Banner"}
-                </button>
-
+              <div className="flex justify-end gap-4 pt-6">
                 <button
                   type="button"
-                  className="bg-gray-400 text-white py-2 rounded"
                   onClick={() => {
                     resetForm();
                     setShowModal(false);
                   }}
+                  className="px-8 py-3 border border-gray-300 rounded-2xl hover:bg-gray-100 font-medium"
                 >
                   Cancel
                 </button>
-
-              </form>
-
-            </div>
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 font-medium"
+                >
+                  {editId ? "Update Banner" : "Create Banner"}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   );
 };

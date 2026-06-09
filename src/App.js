@@ -28,6 +28,13 @@ import PrivacyPolicy from "./pages/PrivacyPolicy/PrivacyPolicy";
 import Homesetting from "./pages/homesetting/Homesetting";
 import Videos from "./pages/videos/Videos";
 import CouponManager from "./pages/Coupons/CouponManager";
+import All_users from "./pages/all_users/All_users";
+import Profile from "./pages/Profile/Profile";
+import Bulk_orders from "./pages/bulk-orders/Bulk_orders";
+import DeliveryPartners from "./pages/DeliveryPartners/DeliveryPartners";
+import Invoice from "./pages/Invoice/Invoice";
+import AdminBilling from "./pages/billing/AdminBilling";
+import InvoiceFormat from "./pages/invoice_formate/InvoiceFormat";
 
 function App() {
   return (
@@ -40,6 +47,8 @@ function App() {
         {/* Protected routes with Sidebar Layout */}
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path='/invoice/:id' element={<Invoice />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/add-category" element={<AddCategory />} />
           <Route path="/manage-category" element={<ManageCategories />} />
           <Route path="/add-subcategory" element={<AddSubcategory />} />
@@ -47,24 +56,30 @@ function App() {
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/manage-product" element={<ManageProducts />} />
           <Route path="/update-category/:id" element={<EditCategory />} />
+          <Route path="/all-users" element={<All_users />} />
 
           <Route path="/orders" element={<Orders />} />
+          <Route path="/bulk-orders" element={<Bulk_orders />} />
           <Route path="/pending-orders" element={<Pending_orders />} />
           <Route path="/shipped-orders" element={<Shipped_orders />} />
           <Route path="/delivered-orders" element={<Delivered_orders />} />
           <Route path="/cancelled-orders" element={<Cancelled_orders />} />
           <Route path="/order-details/:id" element={<Order_details />} />
-          <Route path="/contact" element={<ContactQueries/>}/>
-          <Route path="/homesettings" element={<Homesetting/>}/>
-          <Route path="/videos" element={<Videos/>}/>
-          <Route path="/about" element={<AboutUsForm/>}/>
-          <Route path="/privacy" element={<PrivacyPolicy/>}/>
+          <Route path="/contact" element={<ContactQueries />} />
+          <Route path="/homesettings" element={<Homesetting />} />
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/about" element={<AboutUsForm />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/banner-op" element={<Banner_op />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/color" element={<ButtonColors />} />
-          <Route path="/coupon" element={<CouponManager/>}/>
+          <Route path="/coupon" element={<CouponManager />} />
+          <Route path="/delivery-partners" element={<DeliveryPartners />} />
+
+          <Route path="/billing" element={<AdminBilling />} />
         </Route>
 
+        <Route path="/invoice-format" element={<InvoiceFormat />} />
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>

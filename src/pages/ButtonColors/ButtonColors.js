@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api";
 import { toast } from "react-toastify";
+
 export default function ButtonColors() {
   const [primaryColor, setPrimaryColor] = useState("#4F46E5");
   const [secondaryColor, setSecondaryColor] = useState("#6B7280");
@@ -24,74 +25,99 @@ export default function ButtonColors() {
     setLoading(true);
 
     try {
-      const res = await api.post("button-colors", {
+      await api.post("button-colors", {
         primary_color: primaryColor,
         secondary_color: secondaryColor,
       });
 
       toast.success("Button colors updated successfully!");
     } catch (error) {
-      toast.alert("Error saving colors");
+      toast.error("Error saving colors");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white shadow-md rounded-xl mt-6">
-      <h2 className="text-2xl font-semibold mb-4">Button Color Settings</h2>
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
+          <h1 className="text-4xl font-bold">Button Colors</h1>
+          <p className="text-orange-100 mt-2">Customize your website button colors</p>
+        </div>
 
-      {/* Primary Color Picker */}
-      <div className="mb-6">
-        <label className="text-sm font-medium mb-2 block">Primary Button Color</label>
-        <input
-          type="color"
-          value={primaryColor}
-          onChange={(e) => setPrimaryColor(e.target.value)}
-          className="w-16 h-10 cursor-pointer border rounded"
-        />
-        <p className="mt-2 text-gray-600">Selected: {primaryColor}</p>
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-8">Color Settings</h2>
+
+          {/* Primary Color */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Primary Button Color
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-20 h-12 cursor-pointer border-2 border-gray-200 rounded-2xl overflow-hidden"
+              />
+              <div>
+                <p className="font-mono text-lg font-medium">{primaryColor}</p>
+                <p className="text-sm text-gray-500">Used for main action buttons</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary Color */}
+          <div className="mb-10">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Secondary Button Color
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="color"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="w-20 h-12 cursor-pointer border-2 border-gray-200 rounded-2xl overflow-hidden"
+              />
+              <div>
+                <p className="font-mono text-lg font-medium">{secondaryColor}</p>
+                <p className="text-sm text-gray-500">Used for secondary actions</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Preview */}
+          <div className="mb-10">
+            <p className="text-sm font-medium text-gray-700 mb-4">Live Preview</p>
+            <div className="flex flex-wrap gap-4">
+              <button
+                style={{ backgroundColor: primaryColor }}
+                className="px-8 py-3 text-white font-semibold rounded-2xl shadow-md hover:shadow-lg transition"
+              >
+                Primary Button
+              </button>
+
+              <button
+                style={{ backgroundColor: secondaryColor }}
+                className="px-8 py-3 text-white font-semibold rounded-2xl shadow-md hover:shadow-lg transition"
+              >
+                Secondary Button
+              </button>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="w-full py-4 bg-orange-600 hover:bg-orange-700 text-white font-semibold text-lg rounded-2xl transition-all disabled:opacity-70"
+          >
+            {loading ? "Saving Changes..." : "Save Color Settings"}
+          </button>
+        </div>
       </div>
-
-      {/* Secondary Color Picker */}
-      <div className="mb-6">
-        <label className="text-sm font-medium mb-2 block">Secondary Button Color</label>
-        <input
-          type="color"
-          value={secondaryColor}
-          onChange={(e) => setSecondaryColor(e.target.value)}
-          className="w-16 h-10 cursor-pointer border rounded"
-        />
-        <p className="mt-2 text-gray-600">Selected: {secondaryColor}</p>
-      </div>
-
-      {/* Preview Buttons */}
-      <div className="mb-6">
-        <p className="text-sm font-medium mb-2">Preview:</p>
-
-        <button
-          style={{ background: primaryColor }}
-          className="px-4 py-2 text-white rounded-lg shadow-sm mr-3"
-        >
-          Primary Button
-        </button>
-
-        <button
-          style={{ background: secondaryColor }}
-          className="px-4 py-2 text-white rounded-lg shadow-sm"
-        >
-          Secondary Button
-        </button>
-      </div>
-
-      {/* Save Button */}
-      <button
-        onClick={handleSave}
-        className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        disabled={loading}
-      >
-        {loading ? "Saving..." : "Save Colors"}
-      </button>
     </div>
   );
 }

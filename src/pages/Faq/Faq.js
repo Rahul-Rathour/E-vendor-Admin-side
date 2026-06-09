@@ -1,185 +1,195 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api";
-import SidebarMenu from "../../components/SidebarMenu";
 import { toast } from "react-toastify";
 
 const Faq = () => {
-    const [faqs, setFaqs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [question, setQuestion] = useState("");
-    const [answer, setAnswer] = useState("");
-    const [editId, setEditId] = useState(null);
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    // Load FAQs
-    const fetchFaqs = async () => {
-        try {
-            const res = await api.get("faq");
-            setFaqs(res.data.data);
-        } catch (err) {
-            console.error(err);
-        }
-        setLoading(false);
-    };
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [editId, setEditId] = useState(null);
 
-    useEffect(() => {
-        fetchFaqs();
-    }, []);
+  // Load FAQs
+  const fetchFaqs = async () => {
+    try {
+      const res = await api.get("faq");
+      setFaqs(res.data.data || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load FAQs");
+    }
+    setLoading(false);
+  };
 
-    // Submit (Create / Update)
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!question || !answer) {
-            toast.error("Please fill all fields");
-            return;
-        }
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
 
-        try {
-            const payload = { question, answer };
+  // Submit (Create / Update)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!question || !answer) {
+      toast.error("Please fill both fields");
+      return;
+    }
 
-            if (editId) {
-                await api.put(`admin/faqs/${editId}`, payload);
-                toast.success("FAQ updated successfully");
-            } else {
-                await api.post("admin/faqs", payload);
-                toast.success("FAQ created successfully");
-            }
+    try {
+      const payload = { question, answer };
 
-            resetForm();
-            fetchFaqs();
-        } catch (err) {
-            console.error(err);
-            toast.error("Something went wrong");
-        }
-    };
+      if (editId) {
+        await api.put(`admin/faqs/${editId}`, payload);
+        toast.success("FAQ updated successfully!");
+      } else {
+        await api.post("admin/faqs", payload);
+        toast.success("FAQ created successfully!");
+      }
 
-    const handleEdit = (faq) => {
-        setEditId(faq.id);
-        setQuestion(faq.question);
-        setAnswer(faq.answer);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
+      resetForm();
+      fetchFaqs();
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this FAQ?")) return;
+  const handleEdit = (faq) => {
+    setEditId(faq.id);
+    setQuestion(faq.question);
+    setAnswer(faq.answer);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-        try {
-            await api.delete(`admin/faqs/${id}`);
-            toast.success("FAQ deleted");
-            fetchFaqs();
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to delete");
-        }
-    };
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this FAQ?")) return;
+    try {
+      await api.delete(`admin/faqs/${id}`);
+      toast.success("FAQ deleted successfully!");
+      fetchFaqs();
+    } catch (err) {
+      toast.error("Failed to delete FAQ");
+    }
+  };
 
-    const resetForm = () => {
-        setEditId(null);
-        setQuestion("");
-        setAnswer("");
-    };
+  const resetForm = () => {
+    setEditId(null);
+    setQuestion("");
+    setAnswer("");
+  };
 
-    if (loading)
-        return (
-            <p className="text-center mt-10 text-gray-500 text-lg animate-pulse">
-                Loading FAQs...
-            </p>
-        );
-
+  if (loading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
-            {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */}
-
-            <div
-                className={`transition-all duration-300 p-6`}
-            >
-                <div className="max-w-4xl mx-auto">
-
-                    {/* Header */}
-                    <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
-                        {editId ? "Edit FAQ" : "Add New FAQ"}
-                    </h2>
-
-                    {/* Form Card */}
-                    <form
-                        onSubmit={handleSubmit}
-                        className="backdrop-blur-lg bg-white/70 shadow-xl p-6 rounded-2xl border border-white/30 space-y-4"
-                    >
-                        <input
-                            type="text"
-                            placeholder="FAQ Question"
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-
-                        <textarea
-                            rows="3"
-                            placeholder="FAQ Answer"
-                            value={answer}
-                            onChange={(e) => setAnswer(e.target.value)}
-                            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-
-                        <div className="flex items-center gap-4">
-                            <button
-                                className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition shadow"
-                            >
-                                {editId ? "Update FAQ" : "Create FAQ"}
-                            </button>
-
-                            {editId && (
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition shadow"
-                                >
-                                    Cancel
-                                </button>
-                            )}
-                        </div>
-                    </form>
-
-                    <hr className="my-10 border-gray-300" />
-
-                    {/* FAQ List */}
-                    <h2 className="text-2xl font-semibold mb-4">All FAQs</h2>
-
-                    <div className="grid gap-6">
-                        {faqs.map((faq) => (
-                            <div
-                                key={faq.id}
-                                className="bg-white shadow-xl border border-gray-200 rounded-xl p-5 hover:shadow-2xl transition transform hover:-translate-y-1"
-                            >
-                                <h3 className="text-xl font-semibold text-gray-800">
-                                    {faq.question}
-                                </h3>
-
-                                <p className="text-gray-700 mt-2">{faq.answer}</p>
-
-                                <div className="flex gap-3 mt-4">
-                                    <button
-                                        onClick={() => handleEdit(faq)}
-                                        className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition"
-                                    >
-                                        Edit
-                                    </button>
-
-                                    <button
-                                        onClick={() => handleDelete(faq.id)}
-                                        className="bg-red-600 text-white px-4 py-1.5 rounded-lg hover:bg-red-700 transition"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                </div>
-            </div>
-        </div>
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
+        <p className="text-orange-600 text-xl">Loading FAQs...</p>
+      </div>
     );
+  }
+
+  return (
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
+          <h1 className="text-4xl font-bold">Manage FAQs</h1>
+          <p className="text-orange-100 mt-2">Frequently Asked Questions for your customers</p>
+        </div>
+
+        {/* Add / Edit Form */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-10">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+            {editId ? "Edit FAQ" : "Add New FAQ"}
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Question
+              </label>
+              <input
+                type="text"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                className="w-full border border-gray-300 rounded-2xl px-5 py-4 focus:border-orange-500 focus:outline-none"
+                placeholder="Enter your question here..."
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Answer
+              </label>
+              <textarea
+                rows="4"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                className="w-full border border-gray-300 rounded-2xl px-5 py-4 focus:border-orange-500 focus:outline-none"
+                placeholder="Enter detailed answer..."
+                required
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 rounded-2xl transition"
+              >
+                {editId ? "Update FAQ" : "Create FAQ"}
+              </button>
+
+              {editId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="flex-1 border border-gray-300 hover:bg-gray-100 font-semibold py-4 rounded-2xl transition"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        {/* FAQs List */}
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">All FAQs ({faqs.length})</h2>
+
+        <div className="space-y-4">
+          {faqs.length > 0 ? (
+            faqs.map((faq) => (
+              <div
+                key={faq.id}
+                className="bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-all border border-orange-100"
+              >
+                <h3 className="text-lg font-semibold text-gray-800 leading-relaxed">
+                  {faq.question}
+                </h3>
+                <p className="text-gray-600 mt-3 leading-relaxed">{faq.answer}</p>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => handleEdit(faq)}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(faq.id)}
+                    className="px-6 py-2.5 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition text-sm font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-3xl p-12 text-center text-gray-500">
+              No FAQs added yet.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Faq;

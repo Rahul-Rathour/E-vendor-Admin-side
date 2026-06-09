@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { FaEye } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const Orders = () => {
+const Bulk_orders = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,8 +125,8 @@ const Orders = () => {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {currentOrders.length > 0 ? (
-                  currentOrders.map((order) => (
+                {currentOrders.filter(order => order.type === 1).length > 0 ? (
+                  currentOrders.filter(order => order.type === 1).map((order) => (
                     <tr key={order.id} className="hover:bg-orange-50 transition">
                       <td className="px-6 py-5 font-medium text-gray-800">{order.order_number}</td>
                       <td className="px-6 py-5 text-gray-600">{order.user_id}</td>
@@ -206,4 +206,4 @@ const Orders = () => {
   );
 };
 
-export default Orders;
+export default Bulk_orders;

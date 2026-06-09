@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import api from "../api";
-import SidebarMenu from "../components/SidebarMenu";
+import { toast } from "react-toastify";
 
 const AddCategory = () => {
   const [formData, setFormData] = useState({
@@ -9,11 +9,10 @@ const AddCategory = () => {
     status: true,
   });
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null); // ✅ image preview
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState({}); // ✅ Laravel validation errors
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,7 +26,7 @@ const AddCategory = () => {
     const file = e.target.files[0];
     setImage(file);
     if (file) {
-      setPreview(URL.createObjectURL(file)); // ✅ show preview
+      setPreview(URL.createObjectURL(file));
     } else {
       setPreview(null);
     }
@@ -54,17 +53,19 @@ const AddCategory = () => {
         },
       });
 
-      setMessage(res.data.message || "Category added successfully!");
+      toast.success(res.data.message || "Category added successfully!");
+      
+      // Reset form
       setFormData({ name: "", description: "", status: true });
       setImage(null);
       setPreview(null);
+      setErrors({});
     } catch (err) {
-      if (err.response && err.response.status === 422) {
-        // ✅ Laravel validation errors
+      if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
         setMessage("Please fix the errors below.");
       } else {
-        setMessage("Something went wrong. Try again!");
+        setMessage("Something went wrong. Please try again!");
       }
     } finally {
       setLoading(false);
@@ -72,40 +73,32 @@ const AddCategory = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-green-100 py-12">
-      {/* Sidebar */}
-      {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */}
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-lg mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl px-8 py-8 text-white text-center mb-8">
+          <h1 className="text-4xl font-bold">Add New Category</h1>
+          <p className="text-orange-100 mt-2">Create a new product category</p>
+        </div>
 
-      {/* Main Content */}
-      <div 
-        className={`
-        flex-1 transition-all duration-300
-        px-4 sm:px-6 md:px-10
-        flex justify-center
-      `}
-      >
-        <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg border border-green-100">
-          <h2 className="text-2xl font-semibold text-green-700 mb-6 text-center">
-            Add New Category
-          </h2>
-
-          {/* Message */}
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-8">
           {message && (
-            <p
-              className={`text-center mb-4 ${message.toLowerCase().includes("success")
-                  ? "text-green-600"
-                  : "text-red-600"
-                }`}
-            >
+            <div className={`mb-6 p-4 rounded-2xl text-center font-medium ${
+              message.toLowerCase().includes("success") 
+                ? "bg-green-50 text-green-700" 
+                : "bg-red-50 text-red-700"
+            }`}>
               {message}
-            </p>
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
             {/* Category Name */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
-                Category Name
+                Category Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -113,12 +106,13 @@ const AddCategory = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter category name"
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full border rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 transition-colors ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                }`}
                 required
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>
+                <p className="text-red-600 text-sm mt-1">{errors.name[0]}</p>
               )}
             </div>
 
@@ -131,15 +125,14 @@ const AddCategory = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Enter category description"
-                rows="3"
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.description ? "border-red-500" : "border-gray-300"
-                  }`}
+                placeholder="Enter category description (optional)"
+                rows="4"
+                className={`w-full border rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 transition-colors resize-y min-h-[100px] ${
+                  errors.description ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description[0]}
-                </p>
+                <p className="text-red-600 text-sm mt-1">{errors.description[0]}</p>
               )}
             </div>
 
@@ -152,51 +145,62 @@ const AddCategory = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none ${errors.image ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full border rounded-2xl px-5 py-3 text-gray-500 file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 transition-colors ${
+                  errors.image ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.image && (
-                <p className="text-red-500 text-sm mt-1">{errors.image[0]}</p>
+                <p className="text-red-600 text-sm mt-1">{errors.image[0]}</p>
               )}
 
-              {/* Preview */}
+              {/* Image Preview */}
               {preview && (
-                <div className="mt-3">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-xl border shadow-sm"
-                  />
+                <div className="mt-4 flex justify-center">
+                  <div className="relative">
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-40 h-40 object-cover rounded-3xl border-4 border-orange-100 shadow-md"
+                    />
+                    <div className="absolute -top-2 -right-2 bg-white rounded-full px-2 py-1 shadow text-xs font-medium text-orange-600">
+                      Preview
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-orange-50 p-4 rounded-2xl">
               <input
                 type="checkbox"
                 name="status"
                 checked={formData.status}
                 onChange={handleChange}
-                className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-400"
+                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
               />
-              <label className="text-gray-700 font-medium">Active</label>
+              <label className="text-gray-700 font-medium cursor-pointer">
+                Active (Visible to customers)
+              </label>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition duration-300 disabled:opacity-50 shadow-md"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 rounded-2xl transition-all duration-200 disabled:opacity-70 text-lg shadow-md"
             >
-              {loading ? "Adding..." : "Add Category"}
+              {loading ? "Adding Category..." : "Add Category"}
             </button>
           </form>
         </div>
+
+        <p className="text-center text-gray-500 text-sm mt-6">
+          All fields marked with <span className="text-red-500">*</span> are required
+        </p>
       </div>
     </div>
   );
-
 };
 
 export default AddCategory;

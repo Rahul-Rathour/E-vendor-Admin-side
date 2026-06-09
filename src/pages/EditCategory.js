@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaArrowLeft, FaSave } from "react-icons/fa";
 import api from "../api";
 
 const EditCategory = () => {
@@ -14,31 +15,27 @@ const EditCategory = () => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
-  const [loading, setLoading] = useState(true); // start loading as true
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
 
-  // ✅ Fetch category details on mount
+  // Fetch category details
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await api.get(`categories/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get(`categories/${id}`);
+        const category = res.data.data || res.data;
 
-        const category = res.data.data;
         setFormData({
-          name: category.name,
+          name: category.name || "",
           description: category.description || "",
-          status: category.status,
+          status: category.status === 1 || category.status === true,
         });
 
-        // ✅ Build full image URL if not already absolute
         if (category.image) {
           const fullUrl = category.image.startsWith("http")
             ? category.image
-            : `${process.env.REACT_APP_API_URL}/storage/${category.image}`;
+            : `${process.env.REACT_APP_API_URL || "https://sienna-woodpecker-713808.hostingersite.com"}/storage/${category.image}`;
           setExistingImage(fullUrl);
         }
       } catch (error) {
@@ -52,7 +49,6 @@ const EditCategory = () => {
     fetchCategory();
   }, [id]);
 
-  // ✅ Handle form field change
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -61,7 +57,6 @@ const EditCategory = () => {
     });
   };
 
-  // ✅ Handle image selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
@@ -69,14 +64,12 @@ const EditCategory = () => {
     else setPreview(null);
   };
 
-  // ✅ Submit update
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
     setErrors({});
 
-    const token = localStorage.getItem("token");
     const form = new FormData();
     form.append("name", formData.name);
     form.append("description", formData.description);
@@ -85,163 +78,160 @@ const EditCategory = () => {
 
     try {
       const res = await api.post(`update-category/${id}`, form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setMessage(res.data.message || "Category updated successfully!");
-      navigate("/manage-category");
+      setMessage("Category updated successfully!");
+      setTimeout(() => navigate("/manage-category"), 1500);
     } catch (err) {
       console.error("Update error:", err);
-      if (err.response && err.response.status === 422) {
+      if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
-        setMessage("Please fix the errors below.");
       } else {
-        setMessage("Something went wrong. Try again!");
+        setMessage("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Show loader while fetching data
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-blue-600 text-lg font-medium animate-pulse">
-          Loading category details...
-        </p>
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading category details...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-blue-100 via-white to-blue-50 py-12">
-      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg border border-blue-100">
-        <h2 className="text-2xl font-semibold text-blue-700 mb-6 text-center">
-          Edit Category
-        </h2>
-
-        {message && (
-          <p
-            className={`text-center mb-4 ${
-              message.toLowerCase().includes("success")
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {message}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Category Name */}
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              Category Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter category name"
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300 ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
-              required
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows="3"
-              placeholder="Enter category description"
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300 ${
-                errors.description ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.description[0]}
-              </p>
-            )}
-          </div>
-
-          {/* Image Upload + Preview */}
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              Category Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className={`w-full border rounded-lg px-4 py-2 focus:outline-none ${
-                errors.image ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {errors.image && (
-              <p className="text-red-500 text-sm mt-1">{errors.image[0]}</p>
-            )}
-
-            {existingImage && !preview && (
-              <div className="mt-3">
-                <p className="text-sm text-gray-600 mb-1">Current Image:</p>
-                <img
-                  src={existingImage}
-                  alt="Current"
-                  className="w-32 h-32 object-cover rounded-lg border"
-                  onError={(e) => (e.target.style.display = "none")}
-                />
-              </div>
-            )}
-
-            {preview && (
-              <div className="mt-3">
-                <p className="text-sm text-gray-600 mb-1">New Image Preview:</p>
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="status"
-              checked={formData.status}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-400"
-            />
-            <label className="text-gray-700">Active</label>
-          </div>
-
-          {/* Submit */}
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-300 disabled:opacity-50"
+            onClick={() => navigate(-1)}
+            className="p-3 bg-white rounded-2xl shadow hover:bg-gray-50 transition"
           >
-            {loading ? "Updating..." : "Update Category"}
+            <FaArrowLeft className="text-gray-700" />
           </button>
-        </form>
+          <h1 className="text-3xl font-bold text-gray-800">Edit Category</h1>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10">
+          {message && (
+            <div className={`mb-6 p-4 rounded-2xl text-center font-medium ${
+              message.includes("success") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            }`}>
+              {message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Category Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className={`w-full px-5 py-3 border rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="Enter category name"
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>}
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="4"
+                className={`w-full px-5 py-3 border rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition ${
+                  errors.description ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="Enter category description"
+              />
+              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description[0]}</p>}
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category Image
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className={`w-full px-5 py-3 border rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-orange-50 file:text-orange-700 ${
+                  errors.image ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image[0]}</p>}
+
+              {/* Image Previews */}
+              <div className="mt-4 flex gap-6">
+                {existingImage && !preview && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Current Image</p>
+                    <img
+                      src={existingImage}
+                      alt="Current"
+                      className="w-32 h-32 object-cover rounded-2xl border border-gray-200"
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
+                  </div>
+                )}
+
+                {preview && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">New Image Preview</p>
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-2xl border border-gray-200"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="status"
+                checked={formData.status}
+                onChange={handleChange}
+                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+              />
+              <label className="text-gray-700 font-medium">Active (Visible to users)</label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 rounded-2xl transition flex items-center justify-center gap-3 disabled:opacity-70"
+            >
+              <FaSave />
+              {loading ? "Updating Category..." : "Update Category"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

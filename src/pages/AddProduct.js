@@ -8,6 +8,7 @@ const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
+    wholesale_price: "",
     description: "",
     category_id: "",
     subcategory_id: "",
@@ -71,7 +72,7 @@ const AddProduct = () => {
         const filtered = res.data.data.filter(
           (sub) => sub.category_id === parseInt(formData.category_id)
         );
-        setSubcategories(filtered);
+        setSubcategories(filtered); 
       } catch (err) {
         console.error("Error fetching subcategories:", err);
       }
@@ -154,8 +155,15 @@ const AddProduct = () => {
       
       // Reset form
       setFormData({
-        name: "", price: "", description: "", category_id: "", subcategory_id: "",
-        product_type: "none", qty: "", gst: "", video_link: ""
+        name: "", 
+        price: "", 
+        description: "", 
+        category_id: "", 
+        subcategory_id: "",
+        product_type: "none", 
+        qty: "", 
+        gst: "", 
+        video_link: ""
       });
       setImages({ image: null, image2: null, image3: null, image4: null });
       setPreviews({ image: null, image2: null, image3: null, image4: null });
@@ -220,9 +228,10 @@ const AddProduct = () => {
 
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <TextField label="Product Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
                 <TextField label="Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
+                <TextField label="Wholesale Price *" type="number" name="wholesale_price" value={formData.wholesale_price} onChange={handleChange} error={errors.price} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

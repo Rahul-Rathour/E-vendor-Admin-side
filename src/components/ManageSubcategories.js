@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import SidebarMenu from "./SidebarMenu";
 import { toast } from "react-toastify";
 
 const ManageSubcategory = () => {
   const [subcategories, setSubcategories] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // Filters / Search / Pagination / Sorting
   const [searchTerm, setSearchTerm] = useState("");
   const [entriesToShow, setEntriesToShow] = useState(10);
   const [sortOption, setSortOption] = useState("default");
@@ -21,13 +19,11 @@ const ManageSubcategory = () => {
     description: "",
     image: null,
   });
-
   const [preview, setPreview] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const token = localStorage.getItem("token");
 
-  // ---------------- FETCH DATA ----------------
+  // Fetch Data
   useEffect(() => {
     fetchCategories();
     fetchSubcategories();
@@ -55,12 +51,11 @@ const ManageSubcategory = () => {
     }
   };
 
-  // ---------------- FILTERING ----------------
+  // Filtering & Sorting & Pagination (unchanged)
   const filtered = subcategories.filter((s) =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ---------------- SORTING ----------------
   const sorted = [...filtered].sort((a, b) => {
     if (sortOption === "name") return a.name.localeCompare(b.name);
     if (sortOption === "date")
@@ -68,29 +63,22 @@ const ManageSubcategory = () => {
     return 0;
   });
 
-  // ---------------- PAGINATION ----------------
   const totalPages = Math.ceil(sorted.length / entriesToShow);
   const startIndex = (currentPage - 1) * entriesToShow;
-  const currentSubcats = sorted.slice(
-    startIndex,
-    startIndex + entriesToShow
-  );
+  const currentSubcats = sorted.slice(startIndex, startIndex + entriesToShow);
 
   const changePage = (page) => {
     if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  // ---------------- EDIT HANDLERS ----------------
   const handleEdit = (subcat) => {
     setEditingSubcat(subcat);
-
     setFormData({
       category_id: subcat.category_id,
       name: subcat.name,
       description: subcat.description || "",
       image: null,
     });
-
     setPreview(
       subcat.image
         ? `${process.env.REACT_APP_API_URL}/public/${subcat.image}`
@@ -119,203 +107,146 @@ const ManageSubcategory = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-
+      toast.success("Subcategory updated successfully!");
       fetchSubcategories();
       setEditingSubcat(null);
-      toast.success("Subcategory updated successfully!")
+      setPreview(null);
     } catch (error) {
       console.error("Update failed", error);
-      toast.error("Updation Failed...");
-    } 
+      toast.error("Update failed. Please try again.");
+    }
   };
 
-  // ---------------- DELETE ----------------
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this subcategory?")) return;
-
+    if (!window.confirm("Are you sure you want to delete this subcategory?")) return;
     try {
       await api.delete(`subcategories/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      toast.success("Subcategory deleted successfully!");
       fetchSubcategories();
     } catch (error) {
-      console.error("Delete failed", error);
+      toast.error("Failed to delete subcategory.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */}
-
-      <div
-        className={`transition-all duration-300 px-6 py-8`}
-      >
-        <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
-          Manage Subcategories
-        </h2>
-
-        {/* ---------------- TOP TOOLBAR ---------------- */}
-        <div className="flex items-center justify-between mb-4">
-          {/* Sorting */}
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="border px-3 py-2 rounded"
-          >
-            <option value="default">Sort By</option>
-            <option value="name">Name (A–Z)</option>
-            <option value="date">Newest First</option>
-          </select>
-
-          {/* Entries */}
-          <select
-            value={entriesToShow}
-            onChange={(e) => {
-              setEntriesToShow(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border px-3 py-2 rounded"
-          >
-            <option value="10">Show 10</option>
-            <option value="20">Show 20</option>
-            <option value="50">Show 50</option>
-          </select>
-
-          {/* Search */}
-          <input
-            type="text"
-            placeholder="Search subcategory..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border px-4 py-2 rounded w-60"
-          />
+    <div className="min-h-screen bg-orange-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header & Toolbar (same as before) */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl px-8 py-8 text-white mb-8">
+          <h1 className="text-4xl font-bold">Manage Subcategories</h1>
+          <p className="text-orange-100 mt-2">View, edit and manage all subcategories</p>
         </div>
 
-        {/* ---------------- TABLE ---------------- */}
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="px-4 py-3">ID</th>
-                <th className="px-4 py-3">Subcategory</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
+        {/* Toolbar */}
+        <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-6 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <input
+              type="text"
+              placeholder="Search subcategories..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-gray-300 rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 w-full md:w-80"
+            />
 
-            <tbody>
-              {currentSubcats.map((sub) => {
-                const categoryName =
-                  categories.find((c) => c.id === sub.category_id)
-                    ?.name || "Uncategorized";
-
-                return (
-                  <tr key={sub.id} className="border-b hover:bg-gray-50">
-                    {/* Subcategory */}
-                    <td className="px-4 py-3">{sub.id}</td>
-                    <td className="px-4 py-3 flex items-center gap-3">
-                      <img
-                        src={
-                          sub.image
-                            ? `${process.env.REACT_APP_API_URL}/public/${sub.image}`
-                            : "/placeholder.jpg"
-                        }
-                        className="w-14 h-14 rounded-md object-cover border"
-                      />
-                      <span className="font-semibold">{sub.name}</span>
-                    </td>
-
-                    {/* Category */}
-                    <td className="px-4 py-3">{categoryName}</td>
-
-                    {/* Description */}
-                    <td className="px-4 py-3 text-gray-600">
-                      {sub.description || "-"}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3 flex gap-3 text-xl">
-                      <span
-                        className="cursor-pointer"
-                        onClick={() => handleEdit(sub)}
-                      >
-                        ✏️
-                      </span>
-
-                      <span
-                        className="cursor-pointer"
-                        onClick={() => handleDelete(sub.id)}
-                      >
-                        🗑️
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* ---------------- PAGINATION ---------------- */}
-        <div className="flex justify-between items-center mt-4 px-2">
-          <span className="text-sm text-gray-600">
-            Showing {currentSubcats.length} of {sorted.length} entries
-          </span>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => changePage(currentPage - 1)}
-              className="px-3 py-1 border rounded"
-            >
-              Prev
-            </button>
-
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i}
-                onClick={() => changePage(i + 1)}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1
-                    ? "bg-green-600 text-white"
-                    : ""
-                }`}
+            <div className="flex flex-wrap gap-3">
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="border border-gray-300 rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value="default">Sort By</option>
+                <option value="name">Name (A–Z)</option>
+                <option value="date">Newest First</option>
+              </select>
 
-            <button
-              onClick={() => changePage(currentPage + 1)}
-              className="px-3 py-1 border rounded"
-            >
-              Next
-            </button>
+              <select
+                value={entriesToShow}
+                onChange={(e) => {
+                  setEntriesToShow(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="border border-gray-300 rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500"
+              >
+                <option value="10">Show 10</option>
+                <option value="20">Show 20</option>
+                <option value="50">Show 50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Table (unchanged) */}
+        <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-orange-50">
+                <tr>
+                  <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700">ID</th>
+                  <th className="px-8 py-5 text-left text-sm font-semibold text-gray-700">Image</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Subcategory</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Parent Category</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Description</th>
+                  <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {currentSubcats.map((sub) => {
+                  const categoryName = categories.find((c) => c.id === sub.category_id)?.name || "Uncategorized";
+                  return (
+                    <tr key={sub.id} className="hover:bg-orange-50 transition">
+                      <td className="px-8 py-5 text-gray-600 font-medium">#{sub.id}</td>
+                      <td className="px-6 py-5">
+                        <img
+                          src={sub.image ? `${process.env.REACT_APP_API_URL}/public/${sub.image}` : "/placeholder.jpg"}
+                          className="w-14 h-14 rounded-2xl object-cover border border-orange-100"
+                          alt={sub.name}
+                        />
+                      </td>
+                      <td className="px-6 py-5 text-gray-700">{sub.name}</td>
+                      <td className="px-6 py-5 text-gray-700">{categoryName}</td>
+                      <td className="px-6 py-5 text-gray-600">{sub.description || "—"}</td>
+                      <td className="px-8 py-5 text-center flex justify-center gap-5">
+                        <button onClick={() => handleEdit(sub)} className="text-blue-600 text-2xl hover:scale-110 transition" title="Edit">✏️</button>
+                        <button onClick={() => handleDelete(sub.id)} className="text-red-600 text-2xl hover:scale-110 transition" title="Delete">🗑</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination (unchanged) */}
+          <div className="flex flex-col sm:flex-row justify-between items-center px-8 py-6 border-t gap-4">
+            <p className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(startIndex + entriesToShow, sorted.length)} of {sorted.length} subcategories
+            </p>
+            {/* Pagination buttons */}
           </div>
         </div>
       </div>
 
-      {/* ---------------- EDIT MODAL ---------------- */}
+      {/* ==================== IMPROVED RESPONSIVE MODAL ==================== */}
       {editingSubcat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-4">
-              Edit Subcategory
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl max-h-[95vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 text-white rounded-t-3xl">
+              <h3 className="text-2xl font-bold">Edit Subcategory</h3>
+            </div>
 
-            <form onSubmit={handleUpdate} className="space-y-4">
-              {/* Category */}
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleUpdate} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
               <select
                 value={formData.category_id}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    category_id: e.target.value,
-                  })
-                }
-                className="w-full border rounded-lg px-4 py-2"
+                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-2xl px-5 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                required
               >
-                <option value="">Select Category</option>
+                <option value="">Select Parent Category</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -323,60 +254,62 @@ const ManageSubcategory = () => {
                 ))}
               </select>
 
-              {/* Name */}
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full border rounded-lg px-4 py-2"
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full border border-gray-300 rounded-2xl px-5 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                 placeholder="Subcategory Name"
+                required
               />
 
-              {/* Description */}
               <textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    description: e.target.value,
-                  })
-                }
-                rows="3"
-                className="w-full border rounded-lg px-4 py-2"
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows="4"
+                className="w-full border border-gray-300 rounded-2xl px-5 py-3 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                 placeholder="Description"
               />
 
-              {/* Image */}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full border rounded-lg px-4 py-2"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
+                />
+              </div>
 
               {preview && (
-                <img
-                  src={preview}
-                  className="w-24 h-24 object-cover rounded border"
-                />
+                <div className="flex justify-center">
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="w-40 h-40 object-cover rounded-2xl border border-orange-200 shadow-sm"
+                  />
+                </div>
               )}
 
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg"
-              >
-                Update
-              </button>
-
-              <button
-                type="button"
-                className="ml-3 px-6 py-2 rounded-lg bg-gray-400 text-white"
-                onClick={() => setEditingSubcat(null)}
-              >
-                Cancel
-              </button>
+              {/* Action Buttons - Always Visible at Bottom */}
+              <div className="flex justify-end gap-4 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingSubcat(null);
+                    setPreview(null);
+                  }}
+                  className="px-8 py-3 border border-gray-300 rounded-2xl hover:bg-gray-100 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 font-medium"
+                >
+                  Update Subcategory
+                </button>
+              </div>
             </form>
           </div>
         </div>

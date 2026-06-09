@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import SidebarMenu from "../components/SidebarMenu";
+import { toast } from "react-toastify";
+
 const AddSubcategory = () => {
   const [formData, setFormData] = useState({
     category_id: "",
@@ -14,14 +15,13 @@ const AddSubcategory = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // ✅ Fetch all categories for dropdown
+  // Fetch all categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await api.get(`categories`, {
+        const res = await api.get("categories", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(res.data.data || []);
@@ -32,7 +32,6 @@ const AddSubcategory = () => {
     fetchCategories();
   }, []);
 
-  // ✅ Handle form field changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -41,7 +40,6 @@ const AddSubcategory = () => {
     });
   };
 
-  // ✅ Handle image preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
@@ -52,7 +50,6 @@ const AddSubcategory = () => {
     }
   };
 
-  // ✅ Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -68,14 +65,16 @@ const AddSubcategory = () => {
     if (image) form.append("image", image);
 
     try {
-      const res = await api.post(`subcategories`, form, {
+      const res = await api.post("subcategories", form, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      setMessage(res.data.message || "Subcategory added successfully!");
+      toast.success(res.data.message || "Subcategory added successfully!");
+
+      // Reset form
       setFormData({
         category_id: "",
         name: "",
@@ -84,12 +83,13 @@ const AddSubcategory = () => {
       });
       setImage(null);
       setPreview(null);
+      setErrors({});
     } catch (err) {
-      if (err.response && err.response.status === 422) {
+      if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
         setMessage("Please fix the errors below.");
       } else {
-        setMessage("Something went wrong. Try again!");
+        setMessage("Something went wrong. Please try again!");
       }
     } finally {
       setLoading(false);
@@ -97,50 +97,43 @@ const AddSubcategory = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-green-100 py-12">
-      {/* Sidebar */}
-      {/* <SidebarMenu onToggle={(open) => setSidebarOpen(open)} /> */}
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-lg mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl px-8 py-8 text-white text-center mb-8">
+          <h1 className="text-4xl font-bold">Add New Subcategory</h1>
+          <p className="text-orange-100 mt-2">Create a subcategory under a parent category</p>
+        </div>
 
-      {/* Main Content */}
-      <div
-        className={`
-        flex-1 transition-all duration-300
-        px-4 sm:px-6 md:px-10
-        flex justify-center
-      `}
-      >
-        <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg border border-green-100">
-          <h2 className="text-2xl font-semibold text-green-700 mb-6 text-center">
-            Add New Subcategory
-          </h2>
-
-          {/* Message */}
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-8">
           {message && (
-            <p
-              className={`text-center mb-4 ${message.toLowerCase().includes("success")
-                  ? "text-green-600"
-                  : "text-red-600"
-                }`}
-            >
+            <div className={`mb-6 p-4 rounded-2xl text-center font-medium ${
+              message.toLowerCase().includes("success") 
+                ? "bg-green-50 text-green-700" 
+                : "bg-red-50 text-red-700"
+            }`}>
               {message}
-            </p>
+            </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
             {/* Parent Category */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
-                Select Parent Category
+                Parent Category <span className="text-red-500">*</span>
               </label>
               <select
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleChange}
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.category_id ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full border rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 transition-colors ${
+                  errors.category_id ? "border-red-500" : "border-gray-300"
+                }`}
                 required
               >
-                <option value="">-- Choose Category --</option>
+                <option value="">-- Select Parent Category --</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -148,16 +141,14 @@ const AddSubcategory = () => {
                 ))}
               </select>
               {errors.category_id && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.category_id[0]}
-                </p>
+                <p className="text-red-600 text-sm mt-1">{errors.category_id[0]}</p>
               )}
             </div>
 
             {/* Subcategory Name */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
-                Subcategory Name
+                Subcategory Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -165,12 +156,13 @@ const AddSubcategory = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter subcategory name"
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full border rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 transition-colors ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                }`}
                 required
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name[0]}</p>
+                <p className="text-red-600 text-sm mt-1">{errors.name[0]}</p>
               )}
             </div>
 
@@ -183,15 +175,14 @@ const AddSubcategory = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Enter subcategory description"
-                rows="3"
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 ${errors.description ? "border-red-500" : "border-gray-300"
-                  }`}
+                placeholder="Enter subcategory description (optional)"
+                rows="4"
+                className={`w-full border rounded-2xl px-5 py-3 focus:outline-none focus:border-orange-500 transition-colors resize-y min-h-[100px] ${
+                  errors.description ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.description[0]}
-                </p>
+                <p className="text-red-600 text-sm mt-1">{errors.description[0]}</p>
               )}
             </div>
 
@@ -204,50 +195,62 @@ const AddSubcategory = () => {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`w-full border rounded-xl px-4 py-2 focus:outline-none ${errors.image ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full border rounded-2xl px-5 py-3 text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 transition-colors ${
+                  errors.image ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.image && (
-                <p className="text-red-500 text-sm mt-1">{errors.image[0]}</p>
+                <p className="text-red-600 text-sm mt-1">{errors.image[0]}</p>
               )}
 
+              {/* Preview */}
               {preview && (
-                <div className="mt-3">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-xl border shadow-sm"
-                  />
+                <div className="mt-4 flex justify-center">
+                  <div className="relative">
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-40 h-40 object-cover rounded-3xl border-4 border-orange-100 shadow-md"
+                    />
+                    <div className="absolute -top-2 -right-2 bg-white text-orange-600 text-xs font-medium px-2 py-1 rounded-full shadow">
+                      Preview
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Status */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-orange-50 p-4 rounded-2xl">
               <input
                 type="checkbox"
                 name="status"
                 checked={formData.status}
                 onChange={handleChange}
-                className="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-400"
+                className="w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
               />
-              <label className="text-gray-700 font-medium">Active</label>
+              <label className="text-gray-700 font-medium cursor-pointer">
+                Active (Visible to customers)
+              </label>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl transition duration-300 disabled:opacity-50 shadow-md"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 rounded-2xl transition-all duration-200 disabled:opacity-70 text-lg shadow-md"
             >
-              {loading ? "Adding..." : "Add Subcategory"}
+              {loading ? "Adding Subcategory..." : "Add Subcategory"}
             </button>
           </form>
         </div>
+
+        <p className="text-center text-gray-500 text-sm mt-6">
+          All fields marked with <span className="text-red-500">*</span> are required
+        </p>
       </div>
     </div>
   );
-
 };
 
 export default AddSubcategory;

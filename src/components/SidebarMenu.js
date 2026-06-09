@@ -10,7 +10,7 @@ import {
 } from "react-icons/md";
 
 import { IoHomeOutline } from "react-icons/io5";
-import { LuBoxes, LuPackageSearch } from "react-icons/lu";
+import { LuBoxes, LuPackageSearch, LuUsers } from "react-icons/lu";
 import { FaUserCircle } from "react-icons/fa";
 import { CiSettings } from "react-icons/ci";
 
@@ -23,7 +23,16 @@ export default function SidebarMenu({ open, setOpen }) {
 
   const menuItems = [
     { icon: <IoHomeOutline size={20} />, label: "Home", link: "/" },
-    
+
+    {
+      icon: <LuUsers size={20} />,
+      label: "Users",
+      hasSubmenu: true,
+      submenu: [
+        { label: "All Users", link: "/all-users" },
+        // { label: "Manage Products", link: "/manage-product" },
+      ],
+    },
     {
       icon: <LuBoxes size={20} />,
       label: "Products",
@@ -33,7 +42,7 @@ export default function SidebarMenu({ open, setOpen }) {
         { label: "Manage Products", link: "/manage-product" },
       ],
     },
-    
+
     {
       icon: <LuBoxes size={20} />,
       label: "Categories",
@@ -43,7 +52,7 @@ export default function SidebarMenu({ open, setOpen }) {
         { label: "Manage Category", link: "/manage-category" },
       ],
     },
-    
+
     {
       icon: <LuBoxes size={20} />,
       label: "Sub Categories",
@@ -53,7 +62,7 @@ export default function SidebarMenu({ open, setOpen }) {
         { label: "Manage Subcategory", link: "/manage-subcategory" },
       ],
     },
-    
+
     { icon: <IoHomeOutline size={20} />, label: "Manage Coupons", link: "/coupon" },
     {
       icon: <LuPackageSearch size={20} />,
@@ -61,15 +70,15 @@ export default function SidebarMenu({ open, setOpen }) {
       hasSubmenu: true,
       submenu: [
         { label: "All Orders", link: "/orders" },
+        { label: "Wholesale Orders", link: "/bulk-orders" },
         { label: "Pending Orders", link: "/pending-orders" },
         { label: "Shipped Orders", link: "/shipped-orders" },
         { label: "Delivered Orders", link: "/delivered-orders" },
         { label: "Cancelled Orders", link: "/cancelled-orders" },
       ],
     },
-
-    { icon: <CiSettings size={20} />, label: "Dashboard", link: "/dashboard" },
     { icon: <CiSettings size={20} />, label: "Contact Queries", link: "/contact" },
+    { icon: <CiSettings size={20} />, label: "Delivery Partner", link: "/delivery-partners" },
 
     {
       icon: <CiSettings size={20} />,
@@ -174,10 +183,9 @@ export default function SidebarMenu({ open, setOpen }) {
                           key={i}
                           to={sub.link}
                           className={`block px-4 py-2 rounded-lg text-sm 
-                            ${
-                              location.pathname === sub.link
-                                ? "bg-gray-200 font-medium"
-                                : "hover:bg-gray-100"
+                            ${location.pathname === sub.link
+                              ? "bg-gray-200 font-medium"
+                              : "hover:bg-gray-100"
                             }
                           `}
                           onClick={() => mobileView && setOpen(false)}
@@ -192,10 +200,9 @@ export default function SidebarMenu({ open, setOpen }) {
                 <Link
                   to={item.link}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl
-                    ${
-                      location.pathname === item.link
-                        ? "bg-gray-200 font-medium"
-                        : "hover:bg-gray-100"
+                    ${location.pathname === item.link
+                      ? "bg-gray-200 font-medium"
+                      : "hover:bg-gray-100"
                     }
                   `}
                   onClick={() => mobileView && setOpen(false)}
@@ -218,15 +225,16 @@ export default function SidebarMenu({ open, setOpen }) {
             {open && "Logout"}
           </button>
 
-          <div className="flex items-center gap-3 mt-4">
-            <FaUserCircle size={34} className="text-gray-700" />
-            {open && (
-              <div>
-                <p className="font-medium text-sm">Rahul</p>
-                <p className="text-xs text-gray-500">rahul@gmail.com</p>
-              </div>
-            )}
-          </div>
+          <Link to={"/profile"} >
+            <div className="flex items-center gap-3 mt-4">
+              <FaUserCircle size={34} className="text-gray-700" />
+              {open && (
+                <div>
+                  <p className="font-medium text-sm">Profile</p>
+                </div>
+              )}
+            </div>
+          </Link>
         </div>
       </aside>
     </>

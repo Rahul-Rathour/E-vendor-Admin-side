@@ -22,31 +22,22 @@ const AboutUsForm = () => {
 
   const [timeline, setTimeline] = useState([{ year: "", text: "" }]);
   const [team, setTeam] = useState([{ name: "", role: "", image: "" }]);
+  const [teamImageFiles, setTeamImageFiles] = useState([]);
   const [whyChooseUs, setWhyChooseUs] = useState([{ icon: "", title: "" }]);
+
   const [loading, setLoading] = useState(true);
 
   const safeParse = (value, fallback) => {
     try {
       if (!value) return fallback;
-
-      let parsed = value;
-
-      // If it’s a string, parse once
+      let parsed = typeof value === "string" ? JSON.parse(value) : value;
       if (typeof parsed === "string") parsed = JSON.parse(parsed);
-
-      // If still a string, parse second time
-      if (typeof parsed === "string") parsed = JSON.parse(parsed);
-
-      // Final check: must be array
-      if (!Array.isArray(parsed)) return fallback;
-
-      return parsed;
+      return Array.isArray(parsed) ? parsed : fallback;
     } catch {
       return fallback;
     }
   };
 
-  // Fetch existing data
   useEffect(() => {
     api
       .get("/about")
@@ -68,14 +59,16 @@ const AboutUsForm = () => {
           });
 
           setTimeline(safeParse(d.timeline, [{ year: "", text: "" }]));
-          setTeam(safeParse(d.team, [{ name: "", role: "", image: "" }]));
           setWhyChooseUs(safeParse(d.why_choose_us, [{ icon: "", title: "" }]));
+
+          const parsedTeam = safeParse(d.team, [{ name: "", role: "", image: "" }]);
+          setTeam(parsedTeam);
+          setTeamImageFiles(new Array(parsedTeam.length).fill(null));
 
           setPreviewHero(d.hero_image || null);
           setPreviewStory(d.story_image || null);
         }
       })
-      .catch((err) => console.error("Error loading data:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -95,8 +88,21 @@ const AboutUsForm = () => {
     setter((prev) => [...prev, row]);
   };
 
-  const removeFormRow = (setter, index) => {
+  const removeFormRow = (setter, index, fileSetter = null) => {
     setter((prev) => prev.filter((_, i) => i !== index));
+    if (fileSetter) fileSetter((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleTeamImageChange = (index, file) => {
+    if (!file) return;
+
+    const newFiles = [...teamImageFiles];
+    newFiles[index] = file;
+    setTeamImageFiles(newFiles);
+
+    const updatedTeam = [...team];
+    updatedTeam[index].image = file;
+    setTeam(updatedTeam);
   };
 
   const handleSubmit = (e) => {
@@ -104,6 +110,7 @@ const AboutUsForm = () => {
 
     const form = new FormData();
 
+    // Basic fields
     Object.keys(data).forEach((key) => {
       form.append(key, data[key]);
     });
@@ -112,38 +119,53 @@ const AboutUsForm = () => {
     if (storyImage) form.append("story_image", storyImage);
 
     form.append("timeline", JSON.stringify(timeline));
-    form.append("team", JSON.stringify(team));
     form.append("why_choose_us", JSON.stringify(whyChooseUs));
+
+    // === TEAM - Send in proper nested array format ===
+    team.forEach((member, index) => {
+      form.append(`team[${index}][name]`, member.name.trim());
+      form.append(`team[${index}][role]`, member.role.trim());
+
+      // Append image file if exists
+      const file = teamImageFiles[index];
+      if (file instanceof File) {
+        form.append(`team[${index}][image]`, file);
+      }
+      // If no new file, we don't append anything → backend will keep old image
+    });
 
     api
       .post("/about", form, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((res) => {
-        alert("About Us Updated Successfully!");
-
+        alert("Updated successfully!");
         const d = res.data.data;
+
         setPreviewHero(d.hero_image);
         setPreviewStory(d.story_image);
+
+        if (Array.isArray(d.team)) {
+          setTeam(d.team);
+          setTeamImageFiles(new Array(d.team.length).fill(null));
+        }
       })
       .catch((err) => {
-        console.error(err);
-        alert("Error updating About Us!");
+        console.error(err.response?.data);
+        alert(err.response?.data?.message || "Update failed!");
       });
   };
 
-  if (loading) return <p className="p-6 text-gray-600">Loading...</p>;
+  if (loading) return <p className="p-6">Loading...</p>;
 
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white shadow-lg rounded-xl mt-6">
       <h2 className="text-2xl font-semibold mb-4">About Us Settings</h2>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-
-        {/* ---------------- HERO SECTION ---------------- */}
+        {/* HERO SECTION */}
         <div>
           <h3 className="text-xl font-bold mb-3">Hero Section</h3>
-
           <input
             type="text"
             placeholder="Hero Title"
@@ -160,7 +182,6 @@ const AboutUsForm = () => {
             className="w-full p-3 border rounded-lg mb-3"
           />
 
-          {/* Hero Image */}
           <input
             type="file"
             accept="image/*"
@@ -170,10 +191,12 @@ const AboutUsForm = () => {
             }}
           />
 
-          {previewHero && <img src={previewHero} alt="Hero" className="w-40 mt-3 rounded-lg" />}
+          {previewHero && (
+            <img src = {`${process.env.REACT_APP_API_URL}/public/${previewHero}`} alt="Hero" className="w-40 mt-3 rounded-lg" />
+          )}
         </div>
 
-        {/* ---------------- STORY SECTION ---------------- */}
+        {/* STORY SECTION */}
         <div>
           <h3 className="text-xl font-bold mb-3">Story Section</h3>
 
@@ -191,9 +214,8 @@ const AboutUsForm = () => {
             value={data.story_description}
             onChange={(e) => handleInput("story_description", e.target.value)}
             className="w-full p-3 border rounded-lg mb-3"
-          ></textarea>
+          />
 
-          {/* Story Image */}
           <input
             type="file"
             accept="image/*"
@@ -204,11 +226,15 @@ const AboutUsForm = () => {
           />
 
           {previewStory && (
-            <img src={previewStory} alt="Story" className="w-40 mt-3 rounded-lg" />
+            <img
+              src={`${process.env.REACT_APP_API_URL}/public/${previewStory}` || {previewStory} }
+              alt="Story"
+              className="w-40 mt-3 rounded-lg"
+            />
           )}
         </div>
 
-        {/* ---------------- MISSION & VISION ---------------- */}
+        {/* MISSION & VISION */}
         <div>
           <h3 className="text-xl font-bold mb-3">Mission & Vision</h3>
 
@@ -218,7 +244,7 @@ const AboutUsForm = () => {
             value={data.mission}
             onChange={(e) => handleInput("mission", e.target.value)}
             className="w-full p-3 border rounded-lg mb-3"
-          ></textarea>
+          />
 
           <textarea
             placeholder="Vision"
@@ -226,46 +252,33 @@ const AboutUsForm = () => {
             value={data.vision}
             onChange={(e) => handleInput("vision", e.target.value)}
             className="w-full p-3 border rounded-lg"
-          ></textarea>
+          />
         </div>
 
-        {/* ---------------- COUNTERS ---------------- */}
+        {/* COUNTERS */}
         <div>
           <h3 className="text-xl font-bold mb-3">Counters</h3>
 
           <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Customers"
-              value={data.counter_customers}
-              onChange={(e) => handleInput("counter_customers", e.target.value)}
-              className="p-3 border rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="Orders"
-              value={data.counter_orders}
-              onChange={(e) => handleInput("counter_orders", e.target.value)}
-              className="p-3 border rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="Products"
-              value={data.counter_products}
-              onChange={(e) => handleInput("counter_products", e.target.value)}
-              className="p-3 border rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="Rating"
-              value={data.counter_rating}
-              onChange={(e) => handleInput("counter_rating", e.target.value)}
-              className="p-3 border rounded-lg"
-            />
+            {[
+              ["Customers", "counter_customers"],
+              ["Orders", "counter_orders"],
+              ["Products", "counter_products"],
+              ["Rating", "counter_rating"],
+            ].map(([label, key]) => (
+              <input
+                key={key}
+                type="text"
+                placeholder={label}
+                value={data[key]}
+                onChange={(e) => handleInput(key, e.target.value)}
+                className="p-3 border rounded-lg"
+              />
+            ))}
           </div>
         </div>
 
-        {/* ---------------- TIMELINE ---------------- */}
+        {/* TIMELINE */}
         <div>
           <h3 className="text-xl font-bold mb-3">Timeline</h3>
 
@@ -310,64 +323,81 @@ const AboutUsForm = () => {
           </button>
         </div>
 
-        {/* ---------------- TEAM ---------------- */}
+        {/* TEAM MEMBERS */}
         <div>
           <h3 className="text-xl font-bold mb-3">Team Members</h3>
 
           {team.map((row, i) => (
-            <div key={i} className="grid grid-cols-3 gap-3 mb-3">
-              <input
-                type="text"
-                placeholder="Name"
-                value={row.name}
-                onChange={(e) =>
-                  handleFormArray(setTeam, i, "name", e.target.value)
-                }
-                className="p-2 border rounded-lg"
-              />
+            <div key={i} className="border p-4 rounded-xl mb-4 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={row.name}
+                  onChange={(e) =>
+                    handleFormArray(setTeam, i, "name", e.target.value)
+                  }
+                  className="p-3 border rounded-lg"
+                />
 
-              <input
-                type="text"
-                placeholder="Role"
-                value={row.role}
-                onChange={(e) =>
-                  handleFormArray(setTeam, i, "role", e.target.value)
-                }
-                className="p-2 border rounded-lg"
-              />
+                <input
+                  type="text"
+                  placeholder="Role"
+                  value={row.role}
+                  onChange={(e) =>
+                    handleFormArray(setTeam, i, "role", e.target.value)
+                  }
+                  className="p-3 border rounded-lg"
+                />
 
-              <input
-                type="text"
-                placeholder="Image URL"
-                value={row.image}
-                onChange={(e) =>
-                  handleFormArray(setTeam, i, "image", e.target.value)
-                }
-                className="p-2 border rounded-lg"
-              />
+                <div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      handleTeamImageChange(i, e.target.files[0])
+                    }
+                    className="p-2 border rounded-lg w-full"
+                  />
+
+                  {row.image && (
+                    <img
+                      src={
+                        row.image instanceof File
+                          ? URL.createObjectURL(row.image)
+                          : `${process.env.REACT_APP_API_URL}/public/${row.image}`
+                      }
+                      className="w-24 h-24 object-cover rounded-lg mt-3 border"
+                    />
+                  )}
+                </div>
+              </div>
 
               <button
                 type="button"
-                onClick={() => removeFormRow(setTeam, i)}
-                className="px-3 py-2 bg-red-500 text-white rounded-lg"
+                onClick={() =>
+                  removeFormRow(setTeam, i, setTeamImageFiles)
+                }
+                className="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg text-sm"
               >
-                X
+                Remove Member
               </button>
             </div>
           ))}
 
           <button
             type="button"
-            onClick={() =>
-              addFormRow(setTeam, { name: "", role: "", image: "" })
-            }
+            onClick={() => {
+              addFormRow(setTeam, { name: "", role: "", image: "" });
+              setTeamImageFiles((prev) => [...prev, null]);
+            }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg"
           >
             + Add Team Member
           </button>
         </div>
 
-        {/* ---------------- WHY CHOOSE US ---------------- */}
+        {/* WHY CHOOSE US */}
         <div>
           <h3 className="text-xl font-bold mb-3">Why Choose Us</h3>
 
@@ -380,7 +410,7 @@ const AboutUsForm = () => {
                 onChange={(e) =>
                   handleFormArray(setWhyChooseUs, i, "icon", e.target.value)
                 }
-                className="p-2 border rounded-lg w-28"
+                className="p-2 border rounded-lg w-32"
               />
 
               <input
@@ -410,13 +440,14 @@ const AboutUsForm = () => {
             }
             className="px-4 py-2 bg-green-600 text-white rounded-lg"
           >
-            + Add Feature
+            + Add Why Choose Us
           </button>
         </div>
 
+        {/* SUBMIT BUTTON */}
         <button
           type="submit"
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg"
+          className="w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-semibold"
         >
           Save Changes
         </button>
@@ -425,4 +456,4 @@ const AboutUsForm = () => {
   );
 };
 
-export default AboutUsForm; 
+export default AboutUsForm;

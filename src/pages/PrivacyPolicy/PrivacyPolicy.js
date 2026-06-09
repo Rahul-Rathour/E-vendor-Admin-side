@@ -6,11 +6,9 @@ const PrivacyPolicy = () => {
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // For Add/Edit Modal
+  // Add/Edit Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-
-  // Fields
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -18,14 +16,14 @@ const PrivacyPolicy = () => {
   const [viewModal, setViewModal] = useState(false);
   const [viewItem, setViewItem] = useState(null);
 
-  // Fetch ALL policies
+  // Fetch Policies
   const loadPolicies = () => {
     api
       .get("/privacy-policy")
       .then((res) => {
         setPolicies(res.data.data || []);
       })
-      .catch((err) => console.error("Error fetching:", err))
+      .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   };
 
@@ -49,182 +47,212 @@ const PrivacyPolicy = () => {
     setModalOpen(true);
   };
 
-  // Save or Update Policy
+  // Save Policy
   const handleSave = (e) => {
     e.preventDefault();
+    if (!title || !content) {
+      toast.error("Please fill all fields");
+      return;
+    }
 
     const form = new FormData();
     form.append("title", title);
     form.append("content", content);
 
-    const url = editId
-      ? `/privacy-policy/${editId}`
-      : "/privacy-policy";
+    const url = editId ? `/privacy-policy/${editId}` : "/privacy-policy";
 
     api
       .post(url, form)
       .then(() => {
-        toast.success(editId ? "Updated successfully!" : "Added successfully!");
+        toast.success(editId ? "Policy updated successfully!" : "Policy added successfully!");
         setModalOpen(false);
         loadPolicies();
       })
-      .catch(() => toast.error("Error saving policy"));
+      .catch(() => toast.error("Failed to save policy"));
   };
 
   // Delete Policy
   const deletePolicy = (id) => {
-    if (!window.confirm("Are you sure you want to delete this policy?")) return;
+    if (!window.confirm("Delete this policy?")) return;
 
     api
       .delete(`/privacy-policy/${id}`)
       .then(() => {
-        toast.success("Deleted successfully");
+        toast.success("Policy deleted successfully");
         loadPolicies();
       })
-      .catch(() => toast.error("Error deleting policy"));
+      .catch(() => toast.error("Failed to delete policy"));
   };
 
-  if (loading)
-    return <p className="p-6 text-gray-600">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-orange-50 flex items-center justify-center">
+        <p className="text-orange-600 text-xl">Loading policies...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-orange-50 py-10 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
+          <h1 className="text-4xl font-bold">Privacy Policy</h1>
+          <p className="text-orange-100 mt-2">Manage your website privacy policies</p>
+        </div>
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-semibold">Privacy Policy</h2>
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-        >
-          + Add New Policy
-        </button>
+        {/* Add Button */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={openAddModal}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-2xl font-semibold flex items-center gap-2 shadow-lg"
+          >
+            + Add New Policy
+          </button>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-orange-50">
+                <tr>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Title</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Content Preview</th>
+                  <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {policies.map((item) => (
+                  <tr key={item.id} className="hover:bg-orange-50 transition">
+                    <td className="px-6 py-5 font-medium text-gray-800">
+                      {item.title}
+                    </td>
+                    <td className="px-6 py-5 text-gray-600">
+                      {item.content.length > 120
+                        ? item.content.substring(0, 120) + "..."
+                        : item.content}
+                    </td>
+                    <td className="px-8 py-5 text-center flex justify-center gap-4">
+                      <button
+                        onClick={() => {
+                          setViewItem(item);
+                          setViewModal(true);
+                        }}
+                        className="text-xl hover:scale-110 transition"
+                        title="View"
+                      >
+                        👁
+                      </button>
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="text-blue-600 text-xl hover:scale-110 transition"
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => deletePolicy(item.id)}
+                        className="text-red-600 text-xl hover:scale-110 transition"
+                        title="Delete"
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {policies.length === 0 && (
+                  <tr>
+                    <td colSpan="3" className="text-center py-16 text-gray-500">
+                      No privacy policies found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto bg-white shadow-lg rounded-xl p-4">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b text-gray-700">
-              <th className="p-3">Title</th>
-              <th className="p-3">Content</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {policies.map((item) => (
-              <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="p-3">
-                  {item.title.length > 50
-                    ? item.title.substring(0, 50) + "..."
-                    : item.title}
-                </td>
-
-                <td className="p-3">
-                  {item.content.length > 60
-                    ? item.content.substring(0, 60) + "..."
-                    : item.content}
-                </td>
-
-                <td className="p-3 text-center space-x-3">
-                  {/* View */}
-                  <button
-                    onClick={() => {
-                      setViewItem(item);
-                      setViewModal(true);
-                    }}
-                    className="text-blue-600 hover:underline"
-                  >
-                    View
-                  </button>
-
-                  {/* Edit */}
-                  <button
-                    onClick={() => openEditModal(item)}
-                    className="text-green-600 hover:underline"
-                  >
-                    Edit
-                  </button>
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => deletePolicy(item.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ---------- VIEW MODAL ---------- */}
+      {/* ====================== VIEW MODAL ====================== */}
       {viewModal && viewItem && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-xl max-w-xl w-full">
-            <h3 className="text-xl font-semibold mb-3">{viewItem.title}</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{viewItem.content}</p>
-
-            <button
-              onClick={() => setViewModal(false)}
-              className="mt-4 px-4 py-2 bg-gray-700 text-white rounded-lg"
-            >
-              Close
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-6">
+              <h3 className="text-2xl font-bold">{viewItem.title}</h3>
+            </div>
+            <div className="p-8 max-h-[70vh] overflow-y-auto">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {viewItem.content}
+              </p>
+            </div>
+            <div className="p-6 border-t flex justify-end">
+              <button
+                onClick={() => setViewModal(false)}
+                className="px-8 py-3 border border-gray-300 rounded-2xl hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ---------- ADD/EDIT MODAL ---------- */}
+      {/* ====================== ADD / EDIT MODAL ====================== */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-xl max-w-xl w-full">
-            <h3 className="text-xl font-semibold mb-4">
-              {editId ? "Edit Policy" : "Add New Policy"}
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-6">
+              <h3 className="text-2xl font-bold">
+                {editId ? "Edit Policy" : "Add New Policy"}
+              </h3>
+            </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="p-8 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Policy Title
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full border border-gray-300 rounded-2xl px-5 py-4 focus:border-orange-500"
+                  placeholder="e.g. Privacy Policy"
+                  required
+                />
+              </div>
 
-              {/* Title */}
-              <input
-                type="text"
-                placeholder="Policy Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-3 border rounded"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Content
+                </label>
+                <textarea
+                  rows="12"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full border border-gray-300 rounded-2xl px-5 py-4 focus:border-orange-500"
+                  placeholder="Write full policy content here..."
+                  required
+                />
+              </div>
 
-              {/* Content */}
-              <textarea
-                rows="8"
-                placeholder="Policy Description"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full p-3 border rounded"
-                required
-              ></textarea>
-
-              <div className="flex justify-end gap-3 mt-4">
+              <div className="flex justify-end gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg"
+                  className="px-8 py-3 border border-gray-300 rounded-2xl hover:bg-gray-100"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  className="px-8 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700"
                 >
-                  {editId ? "Update" : "Create"}
+                  {editId ? "Update Policy" : "Create Policy"}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
