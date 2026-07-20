@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
+    hsn: "",
     price: "",
     wholesale_price: "",
     description: "",
@@ -156,6 +157,7 @@ const AddProduct = () => {
       // Reset form
       setFormData({
         name: "", 
+        hsn: "", 
         price: "", 
         description: "", 
         category_id: "", 
@@ -230,11 +232,10 @@ const AddProduct = () => {
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <TextField label="Product Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
+                <TextField label="HSN code" name="name" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
                 <TextField label="Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
                 <TextField label="Wholesale Price *" type="number" name="wholesale_price" value={formData.wholesale_price} onChange={handleChange} error={errors.price} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
                 <TextField label="Quantity" type="number" name="qty" value={formData.qty} onChange={handleChange} error={errors.qty} />
                 <TextField label="GST (%)" type="number" name="gst" value={formData.gst} onChange={handleChange} error={errors.gst} />
                 <TextField label="Video Link" name="video_link" value={formData.video_link} onChange={handleChange} error={errors.video_link} />

@@ -35,6 +35,7 @@ import DeliveryPartners from "./pages/DeliveryPartners/DeliveryPartners";
 import Invoice from "./pages/Invoice/Invoice";
 import AdminBilling from "./pages/billing/AdminBilling";
 import InvoiceFormat from "./pages/invoice_formate/InvoiceFormat";
+import Quotationbill from "./pages/billing/Quotationbill";
 
 function App() {
   return (
@@ -75,8 +76,9 @@ function App() {
           <Route path="/color" element={<ButtonColors />} />
           <Route path="/coupon" element={<CouponManager />} />
           <Route path="/delivery-partners" element={<DeliveryPartners />} />
-
+ 
           <Route path="/billing" element={<AdminBilling />} />
+          <Route path="/quotationbill" element={<Quotationbill/>}/>
         </Route>
 
         <Route path="/invoice-format" element={<InvoiceFormat />} />

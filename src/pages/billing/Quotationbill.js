@@ -6,7 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useNavigate } from "react-router-dom";
 
-const AdminBilling = () => {
+const Quotationbill = () => {
     const [products, setProducts] = useState([]);
     const [selectedItems, setSelectedItems] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -111,7 +111,7 @@ const AdminBilling = () => {
     const grandTotal = subtotal + totalGST - discountAmount;
 
     // Create Invoice
-    const handleCreateInvoice = async () => {
+    const handleCreateQuotation = async () => {
         if (!customer.name || !customer.phone || !customer.billing_address) {
             toast.error("Please fill all required customer details");
             return;
@@ -142,10 +142,10 @@ const AdminBilling = () => {
                 }))
             };
 
-            const res = await api.post("/billing/create", payload);
+            const res = await api.post("/quotation/create", payload);
 
             if (res.data.status) {
-                toast.success("Invoice created successfully!");
+                toast.success("Quotation created successfully!");
 
                 const invoiceData = {
                     customer: { ...customer },
@@ -163,7 +163,7 @@ const AdminBilling = () => {
 
                 setLastInvoiceData(invoiceData);
                 // setCreatedInvoice(res.data);
-
+                
                 // Reset form
                 setSelectedItems([]);
                 setCustomer({
@@ -174,7 +174,7 @@ const AdminBilling = () => {
                 setDiscountValue("");
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to create invoice");
+            toast.error(err.response?.data?.message || "Failed to create quotation");
         } finally {
             setLoading(false);
         }
@@ -193,7 +193,7 @@ const AdminBilling = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
-                    <h1 className="text-4xl font-bold">Create GST Invoice</h1>
+                    <h1 className="text-4xl font-bold">Create Quotation Invoice</h1>
                     <p className="text-orange-100 mt-2">Retail & Wholesale Billing System</p>
                 </div>
 
@@ -274,7 +274,7 @@ const AdminBilling = () => {
                             </div>
                         </div>
                         {/* Payment Method */}
-                        <div className="bg-white rounded-3xl shadow-xl p-6">
+                        {/* <div className="bg-white rounded-3xl shadow-xl p-6">
                             <h3 className="font-semibold mb-4 text-gray-800">Payment Method</h3>
                             <select
                                 value={paymentMethod}
@@ -287,7 +287,7 @@ const AdminBilling = () => {
                                 <option value="Bank Transfer">Bank Transfer</option>
                                 <option value="Credit">Credit</option>
                             </select>
-                        </div>
+                        </div> */}
                         {/* Discount */}
                         <div className="mt-4 p-4 border rounded-2xl bg-gray-50">
                             <h4 className="font-medium mb-3">Discount</h4>
@@ -365,7 +365,7 @@ const AdminBilling = () => {
                         </div>
 
                         <button
-                            onClick={handleCreateInvoice}
+                            onClick={handleCreateQuotation}
                             disabled={loading || selectedItems.length === 0 || !customer.name || !customer.phone}
                             className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white py-4 rounded-3xl font-semibold text-lg flex items-center justify-center gap-3 transition"
                         >
@@ -388,4 +388,4 @@ const AdminBilling = () => {
     );
 };
 
-export default AdminBilling;
+export default Quotationbill;
