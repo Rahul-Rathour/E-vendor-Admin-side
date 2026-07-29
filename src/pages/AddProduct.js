@@ -7,10 +7,13 @@ import { toast } from "react-toastify";
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
+    article_number:"",
     hsn: "",
     price: "",
     wholesale_price: "",
     description: "",
+    specification: "",
+    manufacturing_details: "",
     category_id: "",
     subcategory_id: "",
     product_type: "none",
@@ -157,9 +160,12 @@ const AddProduct = () => {
       // Reset form
       setFormData({
         name: "", 
+        article_number: "", 
         hsn: "", 
         price: "", 
         description: "", 
+        specification: "", 
+        manufacturing_details: "", 
         category_id: "", 
         subcategory_id: "",
         product_type: "none", 
@@ -232,7 +238,8 @@ const AddProduct = () => {
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <TextField label="Product Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
-                <TextField label="HSN code" name="name" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
+                <TextField label="Article number *" name="article_number" value={formData.article_number} onChange={handleChange} error={errors.name} />
+                <TextField label="HSN code" name="hsn" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
                 <TextField label="Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
                 <TextField label="Wholesale Price *" type="number" name="wholesale_price" value={formData.wholesale_price} onChange={handleChange} error={errors.price} />
               
@@ -250,6 +257,28 @@ const AddProduct = () => {
                   className="bg-white rounded-2xl border border-gray-300"
                 />
                 {errors.description && <p className="text-red-600 text-sm mt-1">{errors.description[0]}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Specification</label>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.specification}
+                  onChange={(value) => setFormData({ ...formData, specification: value })}
+                  className="bg-white rounded-2xl border border-gray-300"
+                />
+                {errors.specification && <p className="text-red-600 text-sm mt-1">{errors.specification[0]}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturing Details</label>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.manufacturing_details}
+                  onChange={(value) => setFormData({ ...formData, manufacturing_details: value })}
+                  className="bg-white rounded-2xl border border-gray-300"
+                />
+                {errors.manufacturing_details && <p className="text-red-600 text-sm mt-1">{errors.manufacturing_details[0]}</p>}
               </div>
 
               {/* Category & Type */}
