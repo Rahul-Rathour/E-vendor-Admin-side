@@ -75,6 +75,7 @@ export default function SidebarMenu({ open, setOpen }) {
         { label: "Shipped Orders", link: "/shipped-orders" },
         { label: "Delivered Orders", link: "/delivered-orders" },
         { label: "Cancelled Orders", link: "/cancelled-orders" },
+        { label: "Return Orders", link: "/return-orders" },
       ],
     },
     { icon: <CiSettings size={20} />, label: "Contact Queries", link: "/contact" },

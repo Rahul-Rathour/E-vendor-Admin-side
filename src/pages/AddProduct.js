@@ -20,6 +20,7 @@ const AddProduct = () => {
     qty: "",
     gst: "",
     video_link: "",
+    return_days: "",
   });
 
   const [images, setImages] = useState({
@@ -171,7 +172,8 @@ const AddProduct = () => {
         product_type: "none", 
         qty: "", 
         gst: "", 
-        video_link: ""
+        video_link: "",
+        return_days: ""
       });
       setImages({ image: null, image2: null, image3: null, image4: null });
       setPreviews({ image: null, image2: null, image3: null, image4: null });
@@ -245,6 +247,7 @@ const AddProduct = () => {
               
                 <TextField label="Quantity" type="number" name="qty" value={formData.qty} onChange={handleChange} error={errors.qty} />
                 <TextField label="GST (%)" type="number" name="gst" value={formData.gst} onChange={handleChange} error={errors.gst} />
+                <TextField label="Return Days" type="number" name="return_days" value={formData.return_days} onChange={handleChange} error={errors.gst} />
                 <TextField label="Video Link" name="video_link" value={formData.video_link} onChange={handleChange} error={errors.video_link} />
               </div>
 
