@@ -241,12 +241,12 @@ const AddProduct = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <TextField label="Product Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
                 <TextField label="Article number *" name="article_number" value={formData.article_number} onChange={handleChange} error={errors.name} />
-                <TextField label="HSN code" name="hsn" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
+                <TextField label="HSN code *" name="hsn" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
                 <TextField label="Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
                 <TextField label="Wholesale Price *" type="number" name="wholesale_price" value={formData.wholesale_price} onChange={handleChange} error={errors.price} />
               
                 <TextField label="Quantity" type="number" name="qty" value={formData.qty} onChange={handleChange} error={errors.qty} />
-                <TextField label="GST (%)" type="number" name="gst" value={formData.gst} onChange={handleChange} error={errors.gst} />
+                <TextField label="GST (%) *" type="number" name="gst" value={formData.gst} onChange={handleChange} error={errors.gst} />
                 <TextField label="Return Days" type="number" name="return_days" value={formData.return_days} onChange={handleChange} error={errors.gst} />
                 <TextField label="Video Link" name="video_link" value={formData.video_link} onChange={handleChange} error={errors.video_link} />
               </div>
@@ -313,18 +313,43 @@ const AddProduct = () => {
                 {colors.map((color, index) => (
                   <div key={index} className="bg-white p-6 rounded-2xl mb-6 border border-orange-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <TextField
-                        label="Color Name *"
-                        value={color.name}
-                        onChange={(e) => handleColorChange(index, "name", e.target.value)}
-                      />
-                      <TextField
-                        label="Color Code (Hex)"
-                        value={color.code}
-                        onChange={(e) => handleColorChange(index, "code", e.target.value)}
-                        placeholder="#FF0000"
-                      />
-                    </div>
+  {/* Color Name */}
+  <div className="w-full">
+    <label className="block text-sm font-medium text-[#17365D] mb-2">
+      Color Name *
+    </label>
+
+    <TextField
+      value={color.name}
+      onChange={(e) =>
+        handleColorChange(index, "name", e.target.value)
+      }
+      fullWidth
+    />
+  </div>
+
+  {/* Color Code */}
+  <div className="w-full">
+    <label className="block text-sm font-medium text-[#17365D] mb-2">
+      Color Code *
+    </label>
+
+    <div className="w-full h-[56px] border border-gray-300 rounded-[4px] flex items-center px-3 gap-3">
+      <input
+        type="color"
+        value={color.code || "#000000"}
+        onChange={(e) =>
+          handleColorChange(index, "code", e.target.value)
+        }
+        className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
+      />
+
+      <span className="text-sm text-gray-600 font-mono">
+        {color.code || "#000000"}
+      </span>
+    </div>
+  </div>
+</div>
 
                     <div className="mt-4">
                       <label className="block text-sm font-medium mb-2">Color Images</label>
