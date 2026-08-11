@@ -64,6 +64,7 @@ export default function SidebarMenu({ open, setOpen }) {
     },
 
     { icon: <IoHomeOutline size={20} />, label: "Manage Coupons", link: "/coupon" },
+    { icon: <IoHomeOutline size={20} />, label: "Payments", link: "/payments" },
     {
       icon: <LuPackageSearch size={20} />,
       label: "Orders",

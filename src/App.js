@@ -37,6 +37,7 @@ import AdminBilling from "./pages/billing/AdminBilling";
 import InvoiceFormat from "./pages/invoice_formate/InvoiceFormat";
 import Quotationbill from "./pages/billing/Quotationbill";
 import ReturnOrders from "./pages/return-orders/ReturnOrders";
+import Payments from "./pages/razorpay_payments/Payments";
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route path="/all-users" element={<All_users />} />
 
           <Route path="/orders" element={<Orders />} />
+          <Route path="/payments" element={<Payments />} />
           <Route path="/bulk-orders" element={<Bulk_orders />} />
           <Route path="/pending-orders" element={<Pending_orders />} />
           <Route path="/shipped-orders" element={<Shipped_orders />} />
