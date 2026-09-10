@@ -34,6 +34,16 @@ export default function SidebarMenu({ open, setOpen }) {
       ],
     },
     {
+      icon: <LuUsers size={20} />,
+      label: "Dealers",
+      hasSubmenu: true,
+      submenu: [
+        { label: "All Dealers", link: "/all-dealers" },
+        { label: "Pending Dealers", link: "/pending-dealers" },
+        // { label: "Manage Products", link: "/manage-product" },
+      ],
+    },
+    {
       icon: <LuBoxes size={20} />,
       label: "Products",
       hasSubmenu: true,

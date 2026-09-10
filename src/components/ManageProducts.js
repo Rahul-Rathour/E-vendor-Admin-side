@@ -24,6 +24,7 @@ const ManageProducts = () => {
     name: "",
     article_number: "",
     hsn: "",
+    mrp_price: "",
     price: "",
     wholesale_price: "",
     description: "",
@@ -149,6 +150,7 @@ const ManageProducts = () => {
       name: product.name || "",
       article_number: product.article_number || "",
       hsn: product.hsn || "",
+      mrp_price: product.mrp_price || "",
       price: product.price || "",
       wholesale_price: product.wholesale_price || "",
       description: product.description || "",
@@ -258,6 +260,7 @@ const ManageProducts = () => {
     fd.append("name", formData.name);
     fd.append("article_number", formData.article_number);
     fd.append("hsn", formData.hsn);
+    fd.append("mrp_price", formData.mrp_price);
     fd.append("price", formData.price);
 
     if (formData.wholesale_price !== "") {
@@ -396,6 +399,7 @@ const ManageProducts = () => {
           name: "",
           article_number: "",
           hsn: "",
+          mrp_price: "",
           price: "",
           wholesale_price: "",
           description: "",
@@ -1099,10 +1103,39 @@ const ManageProducts = () => {
                       />
                     </div>
 
+                    {/* MRP_price */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        MRP_price *
+                      </label>
+
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                          ₹
+                        </span>
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.mrp_price}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              mrp_price: e.target.value,
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-xl pl-9 pr-4 py-3 focus:outline-none focus:border-orange-500"
+                          placeholder="Enter MRP price"
+                          required
+                        />
+                      </div>
+                    </div>
+
                     {/* Price */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Selling Price *
+                        Discounted Price *
                       </label>
 
                       <div className="relative">
@@ -2039,6 +2072,11 @@ const ManageProducts = () => {
                   {viewProduct.name}
                 </h3>
 
+
+                {/* mrp_price */}
+                <p className="text-2xl font-bold text-orange-600 mt-2">
+                  ₹{viewProduct.mrp_price}
+                </p>
 
                 {/* Price */}
                 <p className="text-2xl font-bold text-orange-600 mt-2">

@@ -25,17 +25,20 @@ const Dashboard = () => {
     total: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [dealerCount, setDealerCount] = useState(0);
+
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [pendingRes, shippedRes, deliveredRes, recentRes, topRes] = await Promise.all([
+        const [pendingRes, shippedRes, deliveredRes, recentRes, topRes, dealerCountRes] = await Promise.all([
           api.get("orders/pending"),
           api.get("orders/shipped"),
           api.get("orders/delivered"),
           api.get("recent-orders"),
           api.get("top-delivered-items"),
+          api.get("admin/dealers-count"),
         ]);
 
         const pending = pendingRes.data?.data?.length || 0;
@@ -50,6 +53,7 @@ const Dashboard = () => {
         });
 
         setRecentOrders(recentRes.data?.data || []);
+        setDealerCount(dealerCountRes.data?.data || 0);
 
         const formattedTop = (topRes.data?.data || []).map((item) => ({
           name: item.name?.substring(0, 18) + "...",
@@ -88,12 +92,14 @@ const Dashboard = () => {
         </div> */}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
           {[
             { label: "Total Orders", value: orderStats.total, icon: <FaShoppingCart />, color: "orange" },
             { label: "Pending", value: orderStats.pending, icon: <FaClock />, color: "yellow" },
             { label: "Shipping", value: orderStats.shipped, icon: <FaTruck />, color: "blue" },
             { label: "Delivered", value: orderStats.delivered, icon: <FaCheckCircle />, color: "green" },
+            { label: "Total Dealers", value: dealerCount, icon: <FaTruck />, color: "purple" },
+
           ].map((stat, i) => (
             <div
               key={i}
@@ -109,7 +115,8 @@ const Dashboard = () => {
                 <div className={`text-4xl ${stat.color === "orange" ? "text-orange-500" : ""} 
                   ${stat.color === "yellow" ? "text-yellow-500" : ""} 
                   ${stat.color === "blue" ? "text-blue-500" : ""} 
-                  ${stat.color === "green" ? "text-green-500" : ""}`}>
+                  ${stat.color === "green" ? "text-green-500" : ""}
+                  ${stat.color === "purple" ? "text-purple-500" : ""}`}>
                   {stat.icon}
                 </div>
               </div>

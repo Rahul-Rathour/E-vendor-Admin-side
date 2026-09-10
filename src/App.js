@@ -38,6 +38,8 @@ import InvoiceFormat from "./pages/invoice_formate/InvoiceFormat";
 import Quotationbill from "./pages/billing/Quotationbill";
 import ReturnOrders from "./pages/return-orders/ReturnOrders";
 import Payments from "./pages/razorpay_payments/Payments";
+import PendingDealers from "./pages/pending_dealers/PendingDealers";
+import All_dealers from "./pages/All_dealers/All_dealers";
 
 function App() {
   return (
@@ -60,6 +62,8 @@ function App() {
           <Route path="/manage-product" element={<ManageProducts />} />
           <Route path="/update-category/:id" element={<EditCategory />} />
           <Route path="/all-users" element={<All_users />} />
+          <Route path="/pending-dealers" element={<PendingDealers/>}/>
+          <Route path="/all-dealers" element={<All_dealers/>}/>
 
           <Route path="/orders" element={<Orders />} />
           <Route path="/payments" element={<Payments />} />

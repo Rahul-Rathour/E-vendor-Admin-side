@@ -7,8 +7,9 @@ import { toast } from "react-toastify";
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
-    article_number:"",
+    article_number: "",
     hsn: "",
+    mrp: "",
     price: "",
     wholesale_price: "",
     description: "",
@@ -77,7 +78,7 @@ const AddProduct = () => {
         const filtered = res.data.data.filter(
           (sub) => sub.category_id === parseInt(formData.category_id)
         );
-        setSubcategories(filtered); 
+        setSubcategories(filtered);
       } catch (err) {
         console.error("Error fetching subcategories:", err);
       }
@@ -157,21 +158,22 @@ const AddProduct = () => {
       });
 
       toast.success("Product added successfully!");
-      
+
       // Reset form
       setFormData({
-        name: "", 
-        article_number: "", 
-        hsn: "", 
-        price: "", 
-        description: "", 
-        specification: "", 
-        manufacturing_details: "", 
-        category_id: "", 
+        name: "",
+        article_number: "",
+        hsn: "",
+        mrp: "",
+        price: "",
+        description: "",
+        specification: "",
+        manufacturing_details: "",
+        category_id: "",
         subcategory_id: "",
-        product_type: "none", 
-        qty: "", 
-        gst: "", 
+        product_type: "none",
+        qty: "",
+        gst: "",
         video_link: "",
         return_days: ""
       });
@@ -184,7 +186,7 @@ const AddProduct = () => {
       if (err.response?.status === 422) {
         const errData = err.response.data.errors || {};
         setErrors(errData);
-        
+
         // Show general message if available
         setGeneralError(err.response.data.message || "Please check the errors below");
       } else {
@@ -222,7 +224,7 @@ const AddProduct = () => {
     <div className="min-h-screen bg-orange-50 py-10">
       <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-orange-100">
-          
+
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-8 py-6 text-white">
             <h2 className="text-3xl font-bold">Add New Product</h2>
@@ -242,9 +244,10 @@ const AddProduct = () => {
                 <TextField label="Product Name *" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
                 <TextField label="Article number *" name="article_number" value={formData.article_number} onChange={handleChange} error={errors.name} />
                 <TextField label="HSN code *" name="hsn" value={formData.hsn} onChange={handleChange} error={errors.hsn} />
-                <TextField label="Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
+                <TextField label="MRP Price *" type="number" name="mrp" value={formData.mrp} onChange={handleChange} error={errors.mrp} />
+                <TextField label="Discounted Price *" type="number" name="price" value={formData.price} onChange={handleChange} error={errors.price} />
                 <TextField label="Wholesale Price *" type="number" name="wholesale_price" value={formData.wholesale_price} onChange={handleChange} error={errors.price} />
-              
+
                 <TextField label="Quantity" type="number" name="qty" value={formData.qty} onChange={handleChange} error={errors.qty} />
                 <TextField label="GST (%) *" type="number" name="gst" value={formData.gst} onChange={handleChange} error={errors.gst} />
                 <TextField label="Return Days" type="number" name="return_days" value={formData.return_days} onChange={handleChange} error={errors.gst} />
@@ -313,43 +316,43 @@ const AddProduct = () => {
                 {colors.map((color, index) => (
                   <div key={index} className="bg-white p-6 rounded-2xl mb-6 border border-orange-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {/* Color Name */}
-  <div className="w-full">
-    <label className="block text-sm font-medium text-[#17365D] mb-2">
-      Color Name *
-    </label>
+                      {/* Color Name */}
+                      <div className="w-full">
+                        <label className="block text-sm font-medium text-[#17365D] mb-2">
+                          Color Name *
+                        </label>
 
-    <TextField
-      value={color.name}
-      onChange={(e) =>
-        handleColorChange(index, "name", e.target.value)
-      }
-      fullWidth
-    />
-  </div>
+                        <TextField
+                          value={color.name}
+                          onChange={(e) =>
+                            handleColorChange(index, "name", e.target.value)
+                          }
+                          fullWidth
+                        />
+                      </div>
 
-  {/* Color Code */}
-  <div className="w-full">
-    <label className="block text-sm font-medium text-[#17365D] mb-2">
-      Color Code *
-    </label>
+                      {/* Color Code */}
+                      <div className="w-full">
+                        <label className="block text-sm font-medium text-[#17365D] mb-2">
+                          Color Code *
+                        </label>
 
-    <div className="w-full h-[56px] border border-gray-300 rounded-[4px] flex items-center px-3 gap-3">
-      <input
-        type="color"
-        value={color.code || "#000000"}
-        onChange={(e) =>
-          handleColorChange(index, "code", e.target.value)
-        }
-        className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
-      />
+                        <div className="w-full h-[56px] border border-gray-300 rounded-[4px] flex items-center px-3 gap-3">
+                          <input
+                            type="color"
+                            value={color.code || "#000000"}
+                            onChange={(e) =>
+                              handleColorChange(index, "code", e.target.value)
+                            }
+                            className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
+                          />
 
-      <span className="text-sm text-gray-600 font-mono">
-        {color.code || "#000000"}
-      </span>
-    </div>
-  </div>
-</div>
+                          <span className="text-sm text-gray-600 font-mono">
+                            {color.code || "#000000"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="mt-4">
                       <label className="block text-sm font-medium mb-2">Color Images</label>

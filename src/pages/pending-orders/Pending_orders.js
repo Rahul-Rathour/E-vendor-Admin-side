@@ -14,6 +14,7 @@ const PendingOrders = () => {
 
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [invoiceNumbers, setInvoiceNumbers] = useState({});
 
   // Fetch functions
   const fetchOrders = async () => {
@@ -87,16 +88,45 @@ const PendingOrders = () => {
     }
   };
 
-  const handleMarkShipped = async (id) => {
-    try {
-      await api.post(`order/update-status/${id}`, { status: "shipped" });
-      await api.get(`/invoice/generate/${id}`);
-      toast.success("Order marked as shipped!");
-      fetchOrders();
-    } catch (err) {
-      toast.error("Failed to update status");
-    }
-  };
+const handleMarkShipped = async (id) => {
+  const invoiceNumber = invoiceNumbers[id];
+
+  if (!invoiceNumber || invoiceNumber.trim() === "") {
+    toast.warn("Please enter invoice number first!");
+    return;
+  }
+
+  try {
+    // 1. Update order status
+    await api.post(`order/update-status/${id}`, {
+      status: "shipped",
+    });
+
+    // 2. Generate invoice using admin-entered invoice number
+    await api.post(`/invoice/generate/${id}`, {
+      invoice_number: invoiceNumber.trim(),
+    });
+
+    toast.success("Order shipped and invoice generated successfully!");
+
+    fetchOrders();
+
+    // Remove saved invoice number from state
+    setInvoiceNumbers((prev) => {
+      const updated = { ...prev };
+      delete updated[id];
+      return updated;
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Failed to update order"
+    );
+  }
+};
 
   const handleMarkCancelled = async (id) => {
     try {
@@ -111,9 +141,9 @@ const PendingOrders = () => {
   const handleBulkAction = async (status) => {
     if (selectedOrders.length === 0) {
       toast.warn("No orders selected!");
-      return; 
+      return;
     }
-    try { 
+    try {
       await Promise.all(
         selectedOrders.map((id) => api.post(`order/update-status/${id}`, { status })),
         selectedOrders.map((id) => api.get(`/invoice/generate/${id}`))
@@ -196,6 +226,7 @@ const PendingOrders = () => {
                   <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Created</th>
                   <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700 w-40">Tracking Id</th>
                   <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Delivery Partner</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Invoice Number</th>
                   <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700 w-40">Actions</th>
                 </tr>
               </thead>
@@ -251,6 +282,24 @@ const PendingOrders = () => {
                           ))}
                         </select>
                       </td>
+                     <td className="px-6 py-5">
+  <input
+    type="text"
+    placeholder="Invoice Number"
+    className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:border-orange-500 focus:ring-1 min-w-[170px]"
+    value={
+      invoiceNumbers[order.id] ||
+      order.invoice?.invoice_number ||
+      ""
+    }
+    onChange={(e) =>
+      setInvoiceNumbers((prev) => ({
+        ...prev,
+        [order.id]: e.target.value,
+      }))
+    }
+  />
+</td>
 
                       <td className="px-8 py-5 text-center whitespace-nowrap">
                         <div className="flex justify-center gap-5">

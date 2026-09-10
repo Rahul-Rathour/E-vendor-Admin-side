@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 import { toast } from "react-toastify";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaFileExcel } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -17,6 +18,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       try {
         const response = await api.get("orders");
+
         if (response.data.status) {
           setOrders(response.data.data);
           setFilteredOrders(response.data.data);
@@ -26,6 +28,7 @@ const Orders = () => {
         toast.error("Failed to load orders");
       }
     };
+
     fetchOrders();
   }, []);
 
@@ -36,15 +39,23 @@ const Orders = () => {
     // Search
     if (searchQuery) {
       result = result.filter((order) =>
-        order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.shipping_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.delivery_status?.toLowerCase().includes(searchQuery.toLowerCase())
+        order.order_number
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        order.shipping_address
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        order.delivery_status
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
       );
     }
 
     // Status Filter
     if (statusFilter) {
-      result = result.filter((order) => order.delivery_status === statusFilter);
+      result = result.filter(
+        (order) => order.delivery_status === statusFilter
+      );
     }
 
     setFilteredOrders(result);
@@ -54,23 +65,88 @@ const Orders = () => {
   // Pagination
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
-  const handlePageChange = (pageNumber) => setCurrentPage(pageNumber);
+  const currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
+  const totalPages = Math.ceil(
+    filteredOrders.length / ordersPerPage
+  );
+
+  // Excel Download
+  const downloadExcel = () => {
+    if (filteredOrders.length === 0) {
+      toast.warning("No orders available to download");
+      return;
+    }
+
+    // Prepare data for Excel
+    const excelData = filteredOrders.map((order, index) => ({
+      "S.No": index + 1,
+      "Order Number": order.order_number || "",
+      "User ID": order.user_id || "",
+      "Amount": order.total_amount || 0,
+      "Shipping Address": order.shipping_address || "",
+      "Delivery Status": order.delivery_status || "",
+      "Payment Method": order.payment_method || "",
+      "Created At": order.created_at
+        ? new Date(order.created_at).toLocaleDateString("en-IN")
+        : "",
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
+
+    // Set column widths
+    worksheet["!cols"] = [
+      { wch: 8 },   // S.No
+      { wch: 20 },  // Order Number
+      { wch: 12 },  // User ID
+      { wch: 15 },  // Amount
+      { wch: 40 },  // Shipping Address
+      { wch: 18 },  // Delivery Status
+      { wch: 18 },  // Payment Method
+      { wch: 18 },  // Created At
+    ];
+
+    // Generate Excel file
+    XLSX.writeFile(
+      workbook,
+      `orders_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+
+    toast.success("Orders downloaded successfully");
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
     <div className="min-h-screen bg-orange-50 py-10 px-4">
       <div className="max-w-7xl mx-auto">
+
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-3xl px-8 py-10 mb-8 shadow-xl">
-          {/* <h1 className="text-4xl font-bold">All Orders</h1> */}
-          <p className="text-orange-100 mt-2">Manage and track customer orders</p>
+          <p className="text-orange-100 mt-2">
+            Manage and track customer orders
+          </p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+
           <div className="flex gap-3 flex-wrap">
+
+            {/* Orders Per Page */}
             <select
               value={ordersPerPage}
               onChange={(e) => {
@@ -85,6 +161,7 @@ const Orders = () => {
               <option value={50}>Show 50</option>
             </select>
 
+            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -97,8 +174,19 @@ const Orders = () => {
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
             </select>
+
+            {/* Excel Download Button */}
+            <button
+              onClick={downloadExcel}
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-2xl font-medium transition shadow-sm"
+            >
+              <FaFileExcel size={18} />
+              Download Excel
+            </button>
+
           </div>
 
+          {/* Search */}
           <input
             type="text"
             placeholder="Search by order number or address..."
@@ -111,27 +199,71 @@ const Orders = () => {
         {/* Orders Table */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
+
             <table className="min-w-full">
+
               <thead className="bg-orange-50">
                 <tr>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Order Number</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">User ID</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Amount</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Shipping Address</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Payment</th>
-                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">Created At</th>
-                  <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700">Action</th>
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Order Number
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    User ID
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Amount
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Shipping Address
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Status
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Payment
+                  </th>
+
+                  <th className="px-6 py-5 text-left text-sm font-semibold text-gray-700">
+                    Created At
+                  </th>
+
+                  <th className="px-8 py-5 text-center text-sm font-semibold text-gray-700">
+                    Action
+                  </th>
                 </tr>
               </thead>
+
               <tbody className="divide-y">
+
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-orange-50 transition">
-                      <td className="px-6 py-5 font-medium text-gray-800">{order.order_number}</td>
-                      <td className="px-6 py-5 text-gray-600">{order.user_id}</td>
-                      <td className="px-6 py-5 font-semibold">₹{order.total_amount}</td>
-                      <td className="px-6 py-5 max-w-xs truncate">{order.shipping_address}</td>
+
+                    <tr
+                      key={order.id}
+                      className="hover:bg-orange-50 transition"
+                    >
+
+                      <td className="px-6 py-5 font-medium text-gray-800">
+                        {order.order_number}
+                      </td>
+
+                      <td className="px-6 py-5 text-gray-600">
+                        {order.user_id}
+                      </td>
+
+                      <td className="px-6 py-5 font-semibold">
+                        ₹{order.total_amount}
+                      </td>
+
+                      <td className="px-6 py-5 max-w-xs truncate">
+                        {order.shipping_address}
+                      </td>
+
                       <td className="px-6 py-5">
                         <span
                           className={`px-4 py-1.5 text-xs font-medium rounded-2xl ${
@@ -147,10 +279,17 @@ const Orders = () => {
                           {order.delivery_status}
                         </span>
                       </td>
-                      <td className="px-6 py-5">{order.payment_method}</td>
-                      <td className="px-6 py-5 text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleDateString("en-IN")}
+
+                      <td className="px-6 py-5">
+                        {order.payment_method}
                       </td>
+
+                      <td className="px-6 py-5 text-sm text-gray-500">
+                        {new Date(order.created_at).toLocaleDateString(
+                          "en-IN"
+                        )}
+                      </td>
+
                       <td className="px-8 py-5 text-center">
                         <Link
                           to={`/order-details/${order.id}`}
@@ -160,47 +299,78 @@ const Orders = () => {
                           <FaEye size={18} />
                         </Link>
                       </td>
+
                     </tr>
+
                   ))
                 ) : (
+
                   <tr>
-                    <td colSpan="8" className="text-center py-16 text-gray-500">
+                    <td
+                      colSpan="8"
+                      className="text-center py-16 text-gray-500"
+                    >
                       No orders found.
                     </td>
                   </tr>
+
                 )}
+
               </tbody>
+
             </table>
+
           </div>
         </div>
 
         {/* Pagination */}
         <div className="flex justify-between items-center mt-8 px-2">
+
           <span className="text-sm text-gray-600">
-            Showing {indexOfFirstOrder + 1} to{" "}
-            {Math.min(indexOfLastOrder, filteredOrders.length)} of {filteredOrders.length} orders
+            Showing{" "}
+            {filteredOrders.length === 0
+              ? 0
+              : indexOfFirstOrder + 1}{" "}
+            to{" "}
+            {Math.min(
+              indexOfLastOrder,
+              filteredOrders.length
+            )}{" "}
+            of {filteredOrders.length} orders
           </span>
 
           <div className="flex gap-3">
+
             <button
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
+              onClick={() =>
+                setCurrentPage(currentPage - 1)
+              }
               className="px-6 py-3 border border-gray-300 rounded-2xl disabled:opacity-50 hover:bg-gray-100"
             >
               Previous
             </button>
+
             <span className="px-6 py-3 bg-orange-100 text-orange-700 font-medium rounded-2xl">
               Page {currentPage} of {totalPages || 1}
             </span>
+
             <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={
+                currentPage === totalPages ||
+                totalPages === 0
+              }
+              onClick={() =>
+                setCurrentPage(currentPage + 1)
+              }
               className="px-6 py-3 border border-gray-300 rounded-2xl disabled:opacity-50 hover:bg-gray-100"
             >
               Next
             </button>
+
           </div>
         </div>
+
       </div>
     </div>
   );
