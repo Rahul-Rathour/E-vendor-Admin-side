@@ -40,6 +40,8 @@ export default function SidebarMenu({ open, setOpen }) {
       submenu: [
         { label: "All Dealers", link: "/all-dealers" },
         { label: "Pending Dealers", link: "/pending-dealers" },
+        { label: "Trusted Customers", link: "/trusted-dealers" },
+        { label: "Outstanding Customers", link: "/outstanding-customers" },
         // { label: "Manage Products", link: "/manage-product" },
       ],
     },
@@ -73,8 +75,18 @@ export default function SidebarMenu({ open, setOpen }) {
       ],
     },
 
+        {
+      icon: <IoHomeOutline size={20} />,
+      label: "Payments",
+      hasSubmenu: true,
+      submenu: [
+        { label: "Pending Payments", link: "/pending-credit-payments" },
+        { label: "All Payments", link: "/payments" },
+      ],
+    },
+
     { icon: <IoHomeOutline size={20} />, label: "Manage Coupons", link: "/coupon" },
-    { icon: <IoHomeOutline size={20} />, label: "Payments", link: "/payments" },
+    // { icon: <IoHomeOutline size={20} />, label: "Payments", link: "/payments" },
     {
       icon: <LuPackageSearch size={20} />,
       label: "Orders",
@@ -139,16 +151,41 @@ export default function SidebarMenu({ open, setOpen }) {
       {/* SIDEBAR */}
       <aside
         className={`
-          fixed top-0 left-0 h-full bg-white shadow-xl border-r z-50 
-          flex flex-col transition-all duration-300 
-        
-          ${mobileView ? (open ? "translate-x-0" : "-translate-x-full") : ""}
-          ${!mobileView ? (open ? "w-64" : "w-20") : "w-64"}
-        `}
+    fixed top-0 left-0 h-full
+    bg-gradient-to-b from-[#0f0f0f] via-[#171717] to-[#0a0a0a]
+    border-r border-yellow-500/20
+    shadow-[0_0_40px_rgba(234,179,8,0.15)]
+    z-50 flex flex-col
+    transition-all duration-300
+    text-white
+    ${mobileView ? (open ? "translate-x-0" : "-translate-x-full") : ""}
+    ${!mobileView ? (open ? "w-72" : "w-20") : "w-72"}
+  `}
       >
         {/* FIXED HEADER */}
-        <div className="flex items-center justify-between px-4 py-4 border-b bg-white sticky top-0 z-20">
-          {open && <span className="text-lg font-semibold">Admin Panel</span>}
+        <div className="
+          flex items-center
+          justify-between
+          px-5
+          py-5
+          border-b
+          border-yellow-500/20
+          bg-black/30
+          backdrop-blur-lg
+          sticky
+          top-0
+          z-20
+          "
+        >
+          {open && <div>
+            <h2 className="text-xl font-bold text-yellow-400">
+              BlackHewzen
+            </h2>
+            <p className="text-xs text-gray-400">
+              Admin Dashboard
+            </p>
+          </div>
+          }
 
           {mobileView ? (
             <MdClose
@@ -173,9 +210,17 @@ export default function SidebarMenu({ open, setOpen }) {
                     onClick={() =>
                       setOpenSubmenu(openSubmenu === index ? null : index)
                     }
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700"
+                    className={`
+                      w-full flex items-center justify-between
+                      px-4 py-3 rounded-xl
+                      transition-all duration-300
+                      hover:bg-yellow-500/10
+                      hover:text-yellow-400
+                      text-gray-300
+                      group
+                    `}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 text-inherit">
                       {item.icon}
                       {open && <span>{item.label}</span>}
                     </div>
@@ -194,12 +239,12 @@ export default function SidebarMenu({ open, setOpen }) {
                         <Link
                           key={i}
                           to={sub.link}
-                          className={`block px-4 py-2 rounded-lg text-sm 
-                            ${location.pathname === sub.link
-                              ? "bg-gray-200 font-medium"
-                              : "hover:bg-gray-100"
+                          className={`block px-4 py-2 rounded-lg text-sm transition-all duration-300
+${location.pathname === sub.link
+                              ? "bg-yellow-500 text-black font-semibold shadow-lg"
+                              : "text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10"
                             }
-                          `}
+`}
                           onClick={() => mobileView && setOpen(false)}
                         >
                           {sub.label}
@@ -212,11 +257,12 @@ export default function SidebarMenu({ open, setOpen }) {
                 <Link
                   to={item.link}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl
-                    ${location.pathname === item.link
-                      ? "bg-gray-200 font-medium"
-                      : "hover:bg-gray-100"
+transition-all duration-300
+${location.pathname === item.link
+                      ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-semibold shadow-lg"
+                      : "text-gray-300 hover:text-yellow-400 hover:bg-yellow-500/10"
                     }
-                  `}
+`}
                   onClick={() => mobileView && setOpen(false)}
                 >
                   {item.icon}
@@ -228,21 +274,63 @@ export default function SidebarMenu({ open, setOpen }) {
         </nav>
 
         {/* FIXED FOOTER */}
-        <div className="p-4 border-t bg-white sticky bottom-0">
+        <div
+          className="
+  p-4
+  border-t
+  border-yellow-500/20
+  bg-black/30
+  backdrop-blur-lg
+  sticky
+  bottom-0
+"
+        >
           <button
             onClick={handleLogout}
-            className="flex gap-3 items-center text-red-600 hover:bg-red-100 p-2 rounded-lg w-full"
+            className="
+  flex items-center
+  gap-3
+  w-full
+  px-4
+  py-3
+  rounded-xl
+  bg-red-500/10
+  text-red-400
+  hover:bg-red-500
+  hover:text-white
+  transition-all
+  duration-300
+"
           >
             <FiLogOut size={20} />
             {open && "Logout"}
           </button>
 
-          <Link to={"/profile"} >
-            <div className="flex items-center gap-3 mt-4">
-              <FaUserCircle size={34} className="text-gray-700" />
+          <Link to="/profile">
+            <div className="
+  flex items-center
+  gap-3
+  mt-5
+  p-3
+  rounded-xl
+  bg-yellow-500/10
+  hover:bg-yellow-500/20
+  transition-all
+  duration-300
+  ">
+              <FaUserCircle
+                size={38}
+                className="text-yellow-400"
+              />
+
               {open && (
                 <div>
-                  <p className="font-medium text-sm">Profile</p>
+                  <p className="font-semibold text-white">
+                    Administrator
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Manage Account
+                  </p>
                 </div>
               )}
             </div>

@@ -40,6 +40,10 @@ import ReturnOrders from "./pages/return-orders/ReturnOrders";
 import Payments from "./pages/razorpay_payments/Payments";
 import PendingDealers from "./pages/pending_dealers/PendingDealers";
 import All_dealers from "./pages/All_dealers/All_dealers";
+import Trusted_dealers from "./pages/Trusted_dealers/Trusted_dealers";
+import PendingCreditPayments from "./pages/PendingCreditPayments/PendingCreditPayments";
+import OutstandingCustomers from "./pages/OutstandingCustomers/OutstandingCustomers";
+import OverLimitCustomers from "./pages/OverLimitCustomers/OverLimitCustomers";
 
 function App() {
   return (
@@ -64,6 +68,10 @@ function App() {
           <Route path="/all-users" element={<All_users />} />
           <Route path="/pending-dealers" element={<PendingDealers/>}/>
           <Route path="/all-dealers" element={<All_dealers/>}/>
+          <Route path="/trusted-dealers" element={<Trusted_dealers/>}/>
+          <Route path="/pending-credit-payments" element={<PendingCreditPayments/>}/>
+          <Route path="/outstanding-customers" element={<OutstandingCustomers/>}/>
+          <Route path="/over-limit-customers" element={<OverLimitCustomers/>}/>
 
           <Route path="/orders" element={<Orders />} />
           <Route path="/payments" element={<Payments />} />

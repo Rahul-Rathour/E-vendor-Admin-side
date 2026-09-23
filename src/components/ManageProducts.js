@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
+const GOLD = "#D4AF37";
+
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -37,6 +39,7 @@ const ManageProducts = () => {
     video_link: "",
     return_days: "",
     product_type: "none",
+    status: 1,
 
     image: null,
     image2: null,
@@ -67,7 +70,6 @@ const ManageProducts = () => {
     fetchCategories();
   }, []);
 
-  // Fetch subcategories when category changes
   useEffect(() => {
     if (formData.category_id) {
       fetchSubcategories(formData.category_id);
@@ -164,10 +166,6 @@ const ManageProducts = () => {
       return_days: product.return_days ?? "",
       product_type: product.product_type || "none",
 
-      // IMPORTANT:
-      // Load existing status from database
-      // 1 = Available
-      // 0 = Not Available
       status: Number(product.status) === 1 ? 1 : 0,
 
       image: null,
@@ -194,19 +192,13 @@ const ManageProducts = () => {
         : null,
     });
 
-    // =========================
-    // LOAD COLORS + SIZES
-    // =========================
     setColors(
       product.colors?.map((color) => ({
         id: color.id,
         name: color.color_name || "",
         code: color.color_code || "",
-
-        // New images selected by admin
         images: [],
 
-        // Existing color images
         existingImages:
           color.images?.map((img) => ({
             id: img.id,
@@ -254,9 +246,6 @@ const ManageProducts = () => {
 
     const fd = new FormData();
 
-    // =========================
-    // BASIC PRODUCT FIELDS
-    // =========================
     fd.append("name", formData.name);
     fd.append("article_number", formData.article_number);
     fd.append("hsn", formData.hsn);
@@ -269,6 +258,7 @@ const ManageProducts = () => {
 
     fd.append("description", formData.description || "");
     fd.append("specification", formData.specification || "");
+
     fd.append(
       "manufacturing_details",
       formData.manufacturing_details || ""
@@ -299,17 +289,8 @@ const ManageProducts = () => {
     }
 
     fd.append("product_type", formData.product_type || "none");
-    // =========================
-    // PRODUCT AVAILABILITY STATUS
-    // 1 = Available
-    // 0 = Not Available
-    // =========================
     fd.append("status", formData.status ? 1 : 0);
 
-    // =========================
-    // MAIN IMAGES
-    // Only send newly selected images
-    // =========================
     ["image", "image2", "image3", "image4"].forEach((key) => {
       if (formData[key] instanceof File) {
         fd.append(key, formData[key]);
@@ -320,7 +301,6 @@ const ManageProducts = () => {
     // COLORS
     // =========================
     colors.forEach((color, colorIndex) => {
-      // Existing color ID
       if (color.id) {
         fd.append(
           `colors[${colorIndex}][id]`,
@@ -328,21 +308,16 @@ const ManageProducts = () => {
         );
       }
 
-      // Color name
       fd.append(
         `colors[${colorIndex}][name]`,
         color.name || ""
       );
 
-      // Color code
       fd.append(
         `colors[${colorIndex}][code]`,
         color.code || ""
       );
 
-      // =========================
-      // NEW COLOR IMAGES
-      // =========================
       if (color.images?.length > 0) {
         color.images.forEach((image, imageIndex) => {
           fd.append(
@@ -352,9 +327,6 @@ const ManageProducts = () => {
         });
       }
 
-      // =========================
-      // SIZES
-      // =========================
       color.sizes?.forEach((size, sizeIndex) => {
         if (size.id) {
           fd.append(
@@ -389,42 +361,11 @@ const ManageProducts = () => {
 
       if (response.data.status) {
         toast.success(
-          response.data.message || "Product updated successfully!"
+          response.data.message ||
+            "Product updated successfully!"
         );
 
-        setEditingProduct(null);
-        setColors([]);
-
-        setFormData({
-          name: "",
-          article_number: "",
-          hsn: "",
-          mrp_price: "",
-          price: "",
-          wholesale_price: "",
-          description: "",
-          specification: "",
-          manufacturing_details: "",
-          category_id: "",
-          subcategory_id: "",
-          qty: "",
-          gst: "",
-          video_link: "",
-          return_days: "",
-          product_type: "none",
-          image: null,
-          image2: null,
-          image3: null,
-          image4: null,
-        });
-
-        setPreviews({
-          image: null,
-          image2: null,
-          image3: null,
-          image4: null,
-        });
-
+        closeEditModal();
         fetchProducts();
       }
     } catch (err) {
@@ -443,10 +384,49 @@ const ManageProducts = () => {
       } else {
         toast.error(
           err.response?.data?.message ||
-          "Failed to update product"
+            "Failed to update product"
         );
       }
     }
+  };
+
+  // =========================
+  // RESET / CLOSE EDIT
+  // =========================
+  const closeEditModal = () => {
+    setEditingProduct(null);
+    setColors([]);
+
+    setFormData({
+      name: "",
+      article_number: "",
+      hsn: "",
+      mrp_price: "",
+      price: "",
+      wholesale_price: "",
+      description: "",
+      specification: "",
+      manufacturing_details: "",
+      category_id: "",
+      subcategory_id: "",
+      qty: "",
+      gst: "",
+      video_link: "",
+      return_days: "",
+      product_type: "none",
+      status: 1,
+      image: null,
+      image2: null,
+      image3: null,
+      image4: null,
+    });
+
+    setPreviews({
+      image: null,
+      image2: null,
+      image3: null,
+      image4: null,
+    });
   };
 
   // =========================
@@ -613,7 +593,9 @@ const ManageProducts = () => {
   const sortedProducts = [...filteredProducts].sort(
     (a, b) => {
       if (sortOption === "name") {
-        return (a.name || "").localeCompare(b.name || "");
+        return (a.name || "").localeCompare(
+          b.name || ""
+        );
       }
 
       if (sortOption === "price_low") {
@@ -656,260 +638,457 @@ const ManageProducts = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="transition-all duration-300 px-6 py-8">
+    <div className="min-h-screen bg-black text-white px-3 sm:px-5 lg:px-8 py-5 sm:py-7">
 
-        {/* ==================== HEADER ==================== */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-semibold text-gray-800">
-            Manage Products
-          </h2>
+      <div className="max-w-[1600px] mx-auto">
 
-          <p className="text-gray-500 mt-1">
-            Manage product details, images, colors, sizes and stock.
-          </p>
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+        <div className="relative overflow-hidden bg-black border border-[#D4AF37]/40 rounded-2xl sm:rounded-3xl shadow-2xl mb-6 sm:mb-8">
+
+          {/* Golden Glow */}
+          <div className="absolute -right-24 -top-24 w-72 h-72 rounded-full bg-[#D4AF37]/20 blur-3xl" />
+          <div className="absolute right-20 bottom-0 w-40 h-40 rounded-full bg-[#D4AF37]/10 blur-3xl" />
+
+          <div className="relative z-10 px-5 sm:px-7 lg:px-10 py-6 sm:py-8">
+
+            <div className="flex items-center gap-4">
+
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#D4AF37] text-black flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg shadow-[#D4AF37]/20">
+                P
+              </div>
+
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
+                  Manage Products
+                </h1>
+
+                <p className="text-gray-400 text-sm sm:text-base mt-1">
+                  Manage product details, images, colors, sizes and stock.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
         </div>
 
-        {/* ==================== FILTERS ==================== */}
-        <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
+        {/* =====================================================
+            MAIN CARD
+        ===================================================== */}
+        <div className="bg-[#0b0b0b] border border-[#D4AF37]/30 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
 
-          <div className="flex gap-3 flex-wrap">
+          {/* =====================================================
+              FILTER HEADER
+          ===================================================== */}
+          <div className="p-4 sm:p-6 border-b border-[#D4AF37]/20">
 
-            <select
-              value={entriesToShow}
-              onChange={(e) => {
-                setEntriesToShow(
-                  Number(e.target.value)
-                );
-                setPage(1);
-              }}
-              className="border border-gray-300 px-4 py-2.5 rounded-xl bg-white focus:outline-none focus:border-orange-500"
-            >
-              <option value="10">
-                Show 10
-              </option>
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
 
-              <option value="20">
-                Show 20
-              </option>
+              <div>
+                <div className="flex items-center gap-3">
 
-              <option value="50">
-                Show 50
-              </option>
-            </select>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">
+                    Product List
+                  </h2>
 
-            <select
-              value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                setPage(1);
-              }}
-              className="border border-gray-300 px-4 py-2.5 rounded-xl bg-white focus:outline-none focus:border-orange-500"
-            >
-              <option value="">
-                All Categories
-              </option>
+                  <span className="min-w-[34px] h-7 px-2 rounded-full bg-[#D4AF37] text-black text-xs sm:text-sm font-bold flex items-center justify-center">
+                    {sortedProducts.length}
+                  </span>
 
-              {categories.map((cat) => (
-                <option
-                  key={cat.id}
-                  value={cat.id}
-                >
-                  {cat.name}
+                </div>
+
+                <p className="text-gray-500 text-sm mt-1">
+                  View, edit and manage all products
+                </p>
+              </div>
+
+              {/* Search */}
+              <div className="relative w-full xl:w-96">
+
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
+                  🔍
+                </span>
+
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPage(1);
+                  }}
+                  className="
+                    w-full
+                    bg-black
+                    border border-gray-700
+                    text-white
+                    placeholder-gray-500
+                    rounded-xl sm:rounded-2xl
+                    pl-11 pr-4 py-3
+                    outline-none
+                    transition
+                    focus:border-[#D4AF37]
+                    focus:ring-2
+                    focus:ring-[#D4AF37]/20
+                  "
+                />
+
+              </div>
+
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 mt-5">
+
+              <select
+                value={entriesToShow}
+                onChange={(e) => {
+                  setEntriesToShow(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="
+                  bg-black
+                  text-white
+                  border border-gray-700
+                  px-4 py-2.5
+                  rounded-xl
+                  outline-none
+                  focus:border-[#D4AF37]
+                "
+              >
+                <option value="10">Show 10</option>
+                <option value="20">Show 20</option>
+                <option value="50">Show 50</option>
+              </select>
+
+              <select
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="
+                  bg-black
+                  text-white
+                  border border-gray-700
+                  px-4 py-2.5
+                  rounded-xl
+                  outline-none
+                  focus:border-[#D4AF37]
+                "
+              >
+                <option value="">All Categories</option>
+
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={stockFilter}
+                onChange={(e) => {
+                  setStockFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="
+                  bg-black
+                  text-white
+                  border border-gray-700
+                  px-4 py-2.5
+                  rounded-xl
+                  outline-none
+                  focus:border-[#D4AF37]
+                "
+              >
+                <option value="">All Status</option>
+                <option value="instock">In Stock</option>
+                <option value="outstock">Out of Stock</option>
+              </select>
+
+              <select
+                value={sortOption}
+                onChange={(e) =>
+                  setSortOption(e.target.value)
+                }
+                className="
+                  bg-black
+                  text-white
+                  border border-gray-700
+                  px-4 py-2.5
+                  rounded-xl
+                  outline-none
+                  focus:border-[#D4AF37]
+                "
+              >
+                <option value="">Sort By</option>
+                <option value="name">Name (A–Z)</option>
+                <option value="price_low">
+                  Price Low → High
                 </option>
-              ))}
-            </select>
+                <option value="price_high">
+                  Price High → Low
+                </option>
+                <option value="qty">
+                  Quantity High → Low
+                </option>
+                <option value="date">
+                  Newest First
+                </option>
+              </select>
 
-            <select
-              value={stockFilter}
-              onChange={(e) => {
-                setStockFilter(e.target.value);
-                setPage(1);
-              }}
-              className="border border-gray-300 px-4 py-2.5 rounded-xl bg-white focus:outline-none focus:border-orange-500"
-            >
-              <option value="">
-                All Status
-              </option>
-
-              <option value="instock">
-                In Stock
-              </option>
-
-              <option value="outstock">
-                Out of Stock
-              </option>
-            </select>
-
-            <select
-              value={sortOption}
-              onChange={(e) =>
-                setSortOption(e.target.value)
-              }
-              className="border border-gray-300 px-4 py-2.5 rounded-xl bg-white focus:outline-none focus:border-orange-500"
-            >
-              <option value="">
-                Sort By
-              </option>
-
-              <option value="name">
-                Name (A–Z)
-              </option>
-
-              <option value="price_low">
-                Price Low → High
-              </option>
-
-              <option value="price_high">
-                Price High → Low
-              </option>
-
-              <option value="qty">
-                Quantity High → Low
-              </option>
-
-              <option value="date">
-                Newest First
-              </option>
-            </select>
+            </div>
 
           </div>
 
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPage(1);
-            }}
-            className="px-4 py-2.5 border border-gray-300 rounded-xl w-80 bg-white focus:outline-none focus:border-orange-500"
-          />
+          {/* =====================================================
+              RESPONSIVE TABLE
+          ===================================================== */}
+          <div className="w-full overflow-x-auto overscroll-x-contain">
 
-        </div>
+            <table className="w-full min-w-[1000px] border-collapse">
 
-        {/* ==================== TABLE ==================== */}
-        <div className="overflow-x-auto bg-white rounded-2xl shadow">
+              <thead className="bg-black border-b-2 border-[#D4AF37]">
 
-          <table className="min-w-full">
+                <tr>
 
-            <thead>
-              <tr className="bg-orange-50 text-gray-600">
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    Product
+                  </th>
 
-                <th className="p-4 text-left">
-                  Product
-                </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    ID
+                  </th>
 
-                <th className="p-4 text-left">
-                  ID
-                </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    Price
+                  </th>
 
-                <th className="p-4 text-left">
-                  Price
-                </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    Qty
+                  </th>
 
-                <th className="p-4 text-left">
-                  Qty
-                </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    Stock
+                  </th>
 
-                <th className="p-4 text-left">
-                  Stock
-                </th>
+                  <th className="px-4 sm:px-6 py-4 text-center text-xs sm:text-sm font-semibold text-[#D4AF37] whitespace-nowrap">
+                    Actions
+                  </th>
 
-                <th className="p-4 text-center">
-                  Actions
-                </th>
+                </tr>
 
-              </tr>
-            </thead>
+              </thead>
 
-            <tbody>
+              <tbody className="divide-y divide-gray-800">
 
-              {paginatedProducts.length > 0 ? (
-                paginatedProducts.map((prod) => (
+                {paginatedProducts.length > 0 ? (
 
-                  <tr
-                    key={prod.id}
-                    className="border-b hover:bg-orange-50 transition"
-                  >
+                  paginatedProducts.map((prod) => (
 
-                    <td className="p-4 flex items-center gap-3">
+                    <tr
+                      key={prod.id}
+                      className="
+                        group
+                        bg-[#0b0b0b]
+                        hover:bg-[#D4AF37]/10
+                        transition-colors
+                      "
+                    >
 
-                      <img
-                        src={
-                          prod.image
-                            ? `${process.env.REACT_APP_API_URL}/public/${prod.image}`
-                            : "/placeholder.jpg"
-                        }
-                        className="w-12 h-12 rounded-lg object-cover border"
-                        alt={prod.name}
-                      />
+                      {/* Product */}
+                      <td className="px-4 sm:px-6 py-4">
 
-                      <span className="font-medium">
-                        {prod.name}
-                      </span>
+                        <div className="flex items-center gap-3">
 
-                    </td>
+                          <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-700 bg-black flex-shrink-0">
 
-                    <td className="p-4">
-                      #{prod.id}
-                    </td>
+                            <img
+                              src={
+                                prod.image
+                                  ? `${process.env.REACT_APP_API_URL}/public/${prod.image}`
+                                  : "/placeholder.jpg"
+                              }
+                              className="w-full h-full object-cover"
+                              alt={prod.name}
+                            />
 
-                    <td className="p-4 font-semibold">
-                      ₹{prod.price}
-                    </td>
+                          </div>
 
-                    <td className="p-4">
-                      {prod.qty}
-                    </td>
+                          <div className="min-w-0">
 
-                    <td className="p-4">
+                            <div className="font-semibold text-white truncate max-w-[280px]">
+                              {prod.name}
+                            </div>
 
-                      {prod.qty > 0 ? (
-                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                          In Stock
+                            <div className="text-xs text-gray-500 mt-1">
+                              {prod.article_number || "No Article Number"}
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </td>
+
+                      {/* ID */}
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+
+                        <span className="inline-flex px-2.5 py-1 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-bold">
+                          #{prod.id}
                         </span>
-                      ) : (
-                        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs">
-                          Out
-                        </span>
-                      )}
 
-                    </td>
+                      </td>
 
-                    <td className="p-4">
+                      {/* Price */}
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
 
-                      <div className="flex justify-center gap-4">
+                        <div className="font-bold text-[#D4AF37]">
+                          ₹{prod.price}
+                        </div>
 
-                        <button
-                          onClick={() =>
-                            setViewProduct(prod)
-                          }
-                          title="View"
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          👁
-                        </button>
+                        {prod.mrp_price && (
+                          <div className="text-xs text-gray-500 line-through mt-1">
+                            ₹{prod.mrp_price}
+                          </div>
+                        )}
 
-                        <button
-                          onClick={() =>
-                            handleEdit(prod)
-                          }
-                          title="Edit"
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          ✏️
-                        </button>
+                      </td>
 
-                        <button
-                          onClick={() =>
-                            handleDelete(prod.id)
-                          }
-                          title="Delete"
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          🗑
-                        </button>
+                      {/* Qty */}
+                      <td className="px-4 sm:px-6 py-4 text-gray-300 whitespace-nowrap font-medium">
+                        {prod.qty}
+                      </td>
+
+                      {/* Stock */}
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+
+                        {prod.qty > 0 ? (
+
+                          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-xs font-semibold">
+
+                            <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+
+                            In Stock
+
+                          </span>
+
+                        ) : (
+
+                          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">
+
+                            <span className="w-2 h-2 rounded-full bg-red-500" />
+
+                            Out of Stock
+
+                          </span>
+
+                        )}
+
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 sm:px-6 py-4">
+
+                        <div className="flex justify-center items-center gap-2">
+
+                          {/* View */}
+                          <button
+                            onClick={() =>
+                              setViewProduct(prod)
+                            }
+                            title="View Product"
+                            className="
+                              w-10 h-10
+                              rounded-xl
+                              bg-gray-900
+                              border border-gray-700
+                              text-gray-300
+                              hover:text-[#D4AF37]
+                              hover:border-[#D4AF37]
+                              hover:bg-[#D4AF37]/10
+                              transition-all
+                              active:scale-95
+                            "
+                          >
+                            👁
+                          </button>
+
+                          {/* Edit */}
+                          <button
+                            onClick={() =>
+                              handleEdit(prod)
+                            }
+                            title="Edit Product"
+                            className="
+                              w-10 h-10
+                              rounded-xl
+                              bg-[#D4AF37]/10
+                              border border-[#D4AF37]/30
+                              text-[#D4AF37]
+                              hover:bg-[#D4AF37]
+                              hover:text-black
+                              transition-all
+                              active:scale-95
+                            "
+                          >
+                            ✏️
+                          </button>
+
+                          {/* Delete */}
+                          <button
+                            onClick={() =>
+                              handleDelete(prod.id)
+                            }
+                            title="Delete Product"
+                            className="
+                              w-10 h-10
+                              rounded-xl
+                              bg-red-500/10
+                              border border-red-500/20
+                              text-red-400
+                              hover:bg-red-500
+                              hover:text-white
+                              transition-all
+                              active:scale-95
+                            "
+                          >
+                            🗑
+                          </button>
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  ))
+
+                ) : (
+
+                  <tr>
+
+                    <td
+                      colSpan="6"
+                      className="py-16 text-center"
+                    >
+
+                      <div className="flex flex-col items-center">
+
+                        <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-2xl mb-4">
+                          📦
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-white">
+                          No Products Found
+                        </h3>
+
+                        <p className="text-sm text-gray-500 mt-1">
+                          No products match your current filters.
+                        </p>
 
                       </div>
 
@@ -917,200 +1096,253 @@ const ManageProducts = () => {
 
                   </tr>
 
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="p-10 text-center text-gray-500"
-                  >
-                    No products found.
-                  </td>
-                </tr>
-              )}
+                )}
 
-            </tbody>
+              </tbody>
 
-          </table>
+            </table>
 
-        </div>
+          </div>
 
-        {/* ==================== PAGINATION ==================== */}
-        <div className="flex justify-between items-center mt-6">
+          {/* Mobile Scroll Hint */}
+          <div className="lg:hidden px-4 py-3 bg-black border-t border-gray-800 text-center text-xs text-gray-500">
+            ← Swipe horizontally to view all product details →
+          </div>
 
-          <span className="text-sm text-gray-600">
-            Showing{" "}
-            {sortedProducts.length === 0
-              ? 0
-              : startIndex + 1}{" "}
-            to{" "}
-            {Math.min(
-              startIndex + entriesToShow,
-              sortedProducts.length
-            )}{" "}
-            of {sortedProducts.length} products
-          </span>
+          {/* =====================================================
+              PAGINATION
+          ===================================================== */}
+          <div className="px-4 sm:px-6 py-5 border-t border-[#D4AF37]/20 flex flex-col sm:flex-row justify-between items-center gap-4">
 
-          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500 text-center sm:text-left">
 
-            <button
-              disabled={page === 1}
-              onClick={() =>
-                setPage((prev) => prev - 1)
-              }
-              className="px-4 py-2 border rounded-xl disabled:opacity-40 hover:bg-gray-100"
-            >
-              Prev
-            </button>
+              Showing{" "}
+              <span className="text-[#D4AF37] font-semibold">
+                {sortedProducts.length === 0
+                  ? 0
+                  : startIndex + 1}
+              </span>{" "}
+              to{" "}
+              <span className="text-[#D4AF37] font-semibold">
+                {Math.min(
+                  startIndex + entriesToShow,
+                  sortedProducts.length
+                )}
+              </span>{" "}
+              of{" "}
+              <span className="text-white font-semibold">
+                {sortedProducts.length}
+              </span>{" "}
+              products
 
-            <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl">
-              Page {page} of {totalPages || 1}
             </span>
 
-            <button
-              disabled={
-                page === totalPages ||
-                totalPages === 0
-              }
-              onClick={() =>
-                setPage((prev) => prev + 1)
-              }
-              className="px-4 py-2 border rounded-xl disabled:opacity-40 hover:bg-gray-100"
-            >
-              Next
-            </button>
+            <div className="flex items-center gap-2 sm:gap-3">
+
+              <button
+                disabled={page === 1}
+                onClick={() =>
+                  setPage((prev) => prev - 1)
+                }
+                className="
+                  px-4 py-2
+                  border border-gray-700
+                  rounded-xl
+                  text-gray-300
+                  hover:border-[#D4AF37]
+                  hover:text-[#D4AF37]
+                  disabled:opacity-30
+                  disabled:cursor-not-allowed
+                  transition
+                "
+              >
+                Prev
+              </button>
+
+              <span className="px-4 py-2 bg-[#D4AF37] text-black rounded-xl font-bold text-sm">
+                {page} / {totalPages || 1}
+              </span>
+
+              <button
+                disabled={
+                  page === totalPages ||
+                  totalPages === 0
+                }
+                onClick={() =>
+                  setPage((prev) => prev + 1)
+                }
+                className="
+                  px-4 py-2
+                  border border-gray-700
+                  rounded-xl
+                  text-gray-300
+                  hover:border-[#D4AF37]
+                  hover:text-[#D4AF37]
+                  disabled:opacity-30
+                  disabled:cursor-not-allowed
+                  transition
+                "
+              >
+                Next
+              </button>
+
+            </div>
 
           </div>
 
         </div>
-        {/* =========================================================
+
+        {/* =====================================================
             EDIT PRODUCT MODAL
-        ========================================================= */}
+        ===================================================== */}
         {editingProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-            <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl max-h-[95vh] overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
 
-              {/* ================= MODAL HEADER ================= */}
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-5 flex items-center justify-between">
+            <div className="bg-[#0b0b0b] border border-[#D4AF37]/40 text-white w-full max-w-6xl rounded-2xl sm:rounded-3xl shadow-2xl max-h-[95vh] overflow-hidden">
+
+              {/* Modal Header */}
+              <div className="bg-black border-b border-[#D4AF37]/40 px-5 sm:px-8 py-5 flex items-center justify-between">
 
                 <div>
-                  <h3 className="text-2xl font-bold">
-                    Edit Product
-                  </h3>
 
-                  <p className="text-orange-100 text-sm mt-1">
-                    Product ID: #{editingProduct.id}
-                  </p>
+                  <div className="flex items-center gap-3">
+
+                    <div className="w-10 h-10 rounded-xl bg-[#D4AF37] text-black flex items-center justify-center font-bold">
+                      P
+                    </div>
+
+                    <div>
+
+                      <h3 className="text-xl sm:text-2xl font-bold text-white">
+                        Edit Product
+                      </h3>
+
+                      <p className="text-[#D4AF37] text-sm mt-1">
+                        Product ID: #{editingProduct.id}
+                      </p>
+
+                    </div>
+
+                  </div>
+
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingProduct(null);
-                    setColors([]);
-                  }}
-                  className="text-white text-2xl hover:text-orange-100"
+                  onClick={closeEditModal}
+                  className="
+                    w-10 h-10
+                    rounded-xl
+                    bg-gray-900
+                    border border-gray-700
+                    text-gray-300
+                    hover:text-[#D4AF37]
+                    hover:border-[#D4AF37]
+                    transition
+                  "
                 >
                   ✕
                 </button>
 
               </div>
 
-              {/* ================= FORM ================= */}
+              {/* Form */}
               <form
                 onSubmit={handleUpdate}
-                className="p-8 space-y-8 overflow-y-auto max-h-[calc(95vh-90px)]"
+                className="p-5 sm:p-7 lg:p-8 space-y-8 overflow-y-auto max-h-[calc(95vh-90px)]"
               >
 
                 {/* =====================================================
-                    BASIC PRODUCT INFORMATION
+                    BASIC INFORMATION
                 ===================================================== */}
                 <div>
 
                   <div className="mb-5">
-                    <h3 className="text-xl font-bold text-gray-800">
+
+                    <h3 className="text-xl font-bold text-white">
                       Basic Product Information
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
                       Update the basic information of your product.
                     </p>
+
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
 
-                    {/* Product Name */}
+                    {[
+                      {
+                        label: "Product Name *",
+                        key: "name",
+                        type: "text",
+                        placeholder: "Enter product name",
+                        required: true,
+                      },
+                      {
+                        label: "Article Number *",
+                        key: "article_number",
+                        type: "text",
+                        placeholder: "Enter article number",
+                        required: true,
+                      },
+                      {
+                        label: "HSN Code *",
+                        key: "hsn",
+                        type: "text",
+                        placeholder: "Enter HSN code",
+                        required: true,
+                      },
+                    ].map((field) => (
+
+                      <div key={field.key}>
+
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">
+                          {field.label}
+                        </label>
+
+                        <input
+                          type={field.type}
+                          value={formData[field.key]}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [field.key]:
+                                e.target.value,
+                            })
+                          }
+                          className="
+                            w-full
+                            bg-black
+                            border border-gray-700
+                            text-white
+                            rounded-xl
+                            px-4 py-3
+                            outline-none
+                            placeholder-gray-600
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+
+                      </div>
+
+                    ))}
+
+                    {/* MRP */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Product Name *
-                      </label>
 
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            name: e.target.value,
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-                        placeholder="Enter product name"
-                        required
-                      />
-                    </div>
-
-                    {/* Article Number */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Article Number *
-                      </label>
-
-                      <input
-                        type="text"
-                        value={formData.article_number}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            article_number: e.target.value,
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-                        placeholder="Enter article number"
-                        required
-                      />
-                    </div>
-
-                    {/* HSN */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        HSN Code *
-                      </label>
-
-                      <input
-                        type="text"
-                        value={formData.hsn}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            hsn: e.target.value,
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
-                        placeholder="Enter HSN code"
-                        required
-                      />
-                    </div>
-
-                    {/* MRP_price */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        MRP_price *
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
+                        MRP Price *
                       </label>
 
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
                           ₹
                         </span>
 
@@ -1122,24 +1354,38 @@ const ManageProducts = () => {
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              mrp_price: e.target.value,
+                              mrp_price:
+                                e.target.value,
                             })
                           }
-                          className="w-full border border-gray-300 rounded-xl pl-9 pr-4 py-3 focus:outline-none focus:border-orange-500"
-                          placeholder="Enter MRP price"
+                          className="
+                            w-full bg-black
+                            border border-gray-700
+                            text-white
+                            rounded-xl
+                            pl-9 pr-4 py-3
+                            outline-none
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
                           required
                         />
+
                       </div>
+
                     </div>
 
                     {/* Price */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         Discounted Price *
                       </label>
 
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
                           ₹
                         </span>
 
@@ -1154,21 +1400,34 @@ const ManageProducts = () => {
                               price: e.target.value,
                             })
                           }
-                          className="w-full border border-gray-300 rounded-xl pl-9 pr-4 py-3 focus:outline-none focus:border-orange-500"
-                          placeholder="Enter selling price"
+                          className="
+                            w-full bg-black
+                            border border-gray-700
+                            text-white
+                            rounded-xl
+                            pl-9 pr-4 py-3
+                            outline-none
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
                           required
                         />
+
                       </div>
+
                     </div>
 
-                    {/* Wholesale Price */}
+                    {/* Wholesale */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         Wholesale Price
                       </label>
 
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
                           ₹
                         </span>
 
@@ -1180,18 +1439,32 @@ const ManageProducts = () => {
                           onChange={(e) =>
                             setFormData({
                               ...formData,
-                              wholesale_price: e.target.value,
+                              wholesale_price:
+                                e.target.value,
                             })
                           }
-                          className="w-full border border-gray-300 rounded-xl pl-9 pr-4 py-3 focus:outline-none focus:border-orange-500"
+                          className="
+                            w-full bg-black
+                            border border-gray-700
+                            text-white
+                            rounded-xl
+                            pl-9 pr-4 py-3
+                            outline-none
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
                           placeholder="Enter wholesale price"
                         />
+
                       </div>
+
                     </div>
 
                     {/* Quantity */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         Product Quantity
                       </label>
 
@@ -1205,18 +1478,31 @@ const ManageProducts = () => {
                             qty: e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
+                        className="
+                          w-full bg-black
+                          border border-gray-700
+                          text-white
+                          rounded-xl
+                          px-4 py-3
+                          outline-none
+                          focus:border-[#D4AF37]
+                          focus:ring-2
+                          focus:ring-[#D4AF37]/20
+                        "
                         placeholder="Enter available quantity"
                       />
+
                     </div>
 
                     {/* GST */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         GST (%)
                       </label>
 
                       <div className="relative">
+
                         <input
                           type="number"
                           min="0"
@@ -1228,19 +1514,32 @@ const ManageProducts = () => {
                               gst: e.target.value,
                             })
                           }
-                          className="w-full border border-gray-300 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-orange-500"
+                          className="
+                            w-full bg-black
+                            border border-gray-700
+                            text-white
+                            rounded-xl
+                            px-4 py-3 pr-10
+                            outline-none
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
                           placeholder="Enter GST percentage"
                         />
 
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D4AF37]">
                           %
                         </span>
+
                       </div>
+
                     </div>
 
-                    {/* Return Days */}
+                    {/* Return */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         Return Period (Days)
                       </label>
 
@@ -1251,106 +1550,125 @@ const ManageProducts = () => {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            return_days: e.target.value,
+                            return_days:
+                              e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
+                        className="
+                          w-full bg-black
+                          border border-gray-700
+                          text-white
+                          rounded-xl
+                          px-4 py-3
+                          outline-none
+                          focus:border-[#D4AF37]
+                          focus:ring-2
+                          focus:ring-[#D4AF37]/20
+                        "
                         placeholder="Example: 7"
                       />
 
                       <p className="text-xs text-gray-500 mt-1">
                         Enter 0 if this product is non-returnable.
                       </p>
+
                     </div>
 
                   </div>
 
                 </div>
 
-
                 {/* =====================================================
-                    CATEGORY & PRODUCT TYPE
+                    CATEGORY
                 ===================================================== */}
-                <div className="border-t pt-8">
+                <div className="border-t border-gray-800 pt-8">
 
                   <div className="mb-5">
-                    <h3 className="text-xl font-bold text-gray-800">
+
+                    <h3 className="text-xl font-bold text-white">
                       Category & Product Type
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Select the category, subcategory and product type.
+                      Select category, subcategory and product type.
                     </p>
+
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-                    {/* Category */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Category
-                      </label>
-
-                      <select
-                        value={formData.category_id}
-                        onChange={(e) =>
+                    {[
+                      {
+                        label: "Category",
+                        value: formData.category_id,
+                        onChange: (e) =>
                           setFormData({
                             ...formData,
-                            category_id: e.target.value,
+                            category_id:
+                              e.target.value,
                             subcategory_id: "",
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:border-orange-500"
-                      >
-                        <option value="">
-                          Select Category
-                        </option>
-
-                        {categories.map((category) => (
-                          <option
-                            key={category.id}
-                            value={category.id}
-                          >
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Subcategory */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Subcategory
-                      </label>
-
-                      <select
-                        value={formData.subcategory_id}
-                        onChange={(e) =>
+                          }),
+                        options: categories,
+                        placeholder: "Select Category",
+                      },
+                      {
+                        label: "Subcategory",
+                        value: formData.subcategory_id,
+                        onChange: (e) =>
                           setFormData({
                             ...formData,
-                            subcategory_id: e.target.value,
-                          })
-                        }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:border-orange-500"
-                      >
-                        <option value="">
-                          Select Subcategory
-                        </option>
+                            subcategory_id:
+                              e.target.value,
+                          }),
+                        options: subcategories,
+                        placeholder: "Select Subcategory",
+                      },
+                    ].map((field, index) => (
 
-                        {subcategories.map((subcategory) => (
-                          <option
-                            key={subcategory.id}
-                            value={subcategory.id}
-                          >
-                            {subcategory.name}
+                      <div key={index}>
+
+                        <label className="block text-sm font-semibold text-gray-300 mb-2">
+                          {field.label}
+                        </label>
+
+                        <select
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="
+                            w-full bg-black
+                            text-white
+                            border border-gray-700
+                            rounded-xl
+                            px-4 py-3
+                            outline-none
+                            focus:border-[#D4AF37]
+                            focus:ring-2
+                            focus:ring-[#D4AF37]/20
+                          "
+                        >
+                          <option value="">
+                            {field.placeholder}
                           </option>
-                        ))}
-                      </select>
-                    </div>
+
+                          {field.options.map((item) => (
+                            <option
+                              key={item.id}
+                              value={item.id}
+                            >
+                              {item.name}
+                            </option>
+                          ))}
+
+                        </select>
+
+                      </div>
+
+                    ))}
 
                     {/* Product Type */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+
+                      <label className="block text-sm font-semibold text-gray-300 mb-2">
                         Product Type
                       </label>
 
@@ -1359,57 +1677,67 @@ const ManageProducts = () => {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            product_type: e.target.value,
+                            product_type:
+                              e.target.value,
                           })
                         }
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:border-orange-500"
+                        className="
+                          w-full bg-black
+                          text-white
+                          border border-gray-700
+                          rounded-xl
+                          px-4 py-3
+                          outline-none
+                          focus:border-[#D4AF37]
+                          focus:ring-2
+                          focus:ring-[#D4AF37]/20
+                        "
                       >
                         <option value="none">
                           None
                         </option>
-
                         <option value="new">
                           New Arrival
                         </option>
-
                         <option value="special_offer">
                           Special Offer
                         </option>
-
                         <option value="hot_deal">
                           Hot Deal
                         </option>
                       </select>
+
                     </div>
 
                   </div>
 
                 </div>
 
-
                 {/* =====================================================
                     DESCRIPTION
                 ===================================================== */}
-                <div className="border-t pt-8">
+                <div className="border-t border-gray-800 pt-8">
 
                   <div className="mb-5">
-                    <h3 className="text-xl font-bold text-gray-800">
+
+                    <h3 className="text-xl font-bold text-white">
                       Product Description
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Update the product description and other details.
+                      Update product description and details.
                     </p>
+
                   </div>
 
-                  {/* Description */}
                   <div className="mb-6">
 
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
                       Description
                     </label>
 
-                    <div className="border border-gray-300 rounded-2xl overflow-hidden">
+                    <div className="rounded-2xl overflow-hidden border border-gray-700 bg-white">
+
                       <ReactQuill
                         theme="snow"
                         value={formData.description}
@@ -1420,14 +1748,14 @@ const ManageProducts = () => {
                           })
                         }
                       />
+
                     </div>
 
                   </div>
 
-                  {/* Specification */}
                   <div className="mb-6">
 
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
                       Specification
                     </label>
 
@@ -1437,19 +1765,30 @@ const ManageProducts = () => {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          specification: e.target.value,
+                          specification:
+                            e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 resize-none"
+                      className="
+                        w-full bg-black
+                        border border-gray-700
+                        text-white
+                        rounded-xl
+                        px-4 py-3
+                        outline-none
+                        resize-none
+                        focus:border-[#D4AF37]
+                        focus:ring-2
+                        focus:ring-[#D4AF37]/20
+                      "
                       placeholder="Enter product specifications"
                     />
 
                   </div>
 
-                  {/* Manufacturing Details */}
                   <div>
 
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
                       Manufacturing Details
                     </label>
 
@@ -1463,7 +1802,18 @@ const ManageProducts = () => {
                             e.target.value,
                         })
                       }
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500 resize-none"
+                      className="
+                        w-full bg-black
+                        border border-gray-700
+                        text-white
+                        rounded-xl
+                        px-4 py-3
+                        outline-none
+                        resize-none
+                        focus:border-[#D4AF37]
+                        focus:ring-2
+                        focus:ring-[#D4AF37]/20
+                      "
                       placeholder="Enter manufacturing details"
                     />
 
@@ -1471,13 +1821,12 @@ const ManageProducts = () => {
 
                 </div>
 
-
                 {/* =====================================================
                     VIDEO
                 ===================================================== */}
-                <div className="border-t pt-8">
+                <div className="border-t border-gray-800 pt-8">
 
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Product Video Link
                   </label>
 
@@ -1487,10 +1836,21 @@ const ManageProducts = () => {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        video_link: e.target.value,
+                        video_link:
+                          e.target.value,
                       })
                     }
-                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
+                    className="
+                      w-full bg-black
+                      border border-gray-700
+                      text-white
+                      rounded-xl
+                      px-4 py-3
+                      outline-none
+                      focus:border-[#D4AF37]
+                      focus:ring-2
+                      focus:ring-[#D4AF37]/20
+                    "
                     placeholder="https://www.youtube.com/..."
                   />
 
@@ -1500,24 +1860,25 @@ const ManageProducts = () => {
 
                 </div>
 
-
                 {/* =====================================================
-                    MAIN PRODUCT IMAGES
+                    MAIN IMAGES
                 ===================================================== */}
-                <div className="border-t pt-8">
+                <div className="border-t border-gray-800 pt-8">
 
                   <div className="mb-5">
-                    <h3 className="text-xl font-bold text-gray-800">
+
+                    <h3 className="text-xl font-bold text-white">
                       Main Product Images
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Select a new image only if you want to replace the
-                      existing image.
+                      Select a new image only if you want to replace
+                      the existing image.
                     </p>
+
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
 
                     {[
                       {
@@ -1540,26 +1901,34 @@ const ManageProducts = () => {
 
                       <div
                         key={item.key}
-                        className="border border-gray-200 rounded-2xl p-4 bg-gray-50"
+                        className="
+                          border border-gray-700
+                          rounded-2xl
+                          p-4
+                          bg-black
+                        "
                       >
 
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        <label className="block text-sm font-semibold text-gray-300 mb-3">
                           {item.label}
                         </label>
 
-                        {/* Preview */}
-                        <div className="w-full h-36 bg-white rounded-xl border flex items-center justify-center overflow-hidden mb-3">
+                        <div className="w-full h-36 bg-[#0b0b0b] rounded-xl border border-gray-700 flex items-center justify-center overflow-hidden mb-3">
 
                           {previews[item.key] ? (
+
                             <img
                               src={previews[item.key]}
                               alt={item.label}
                               className="w-full h-full object-cover"
                             />
+
                           ) : (
-                            <span className="text-sm text-gray-400">
+
+                            <span className="text-sm text-gray-600">
                               No Image
                             </span>
+
                           )}
 
                         </div>
@@ -1573,7 +1942,7 @@ const ManageProducts = () => {
                               item.key
                             )
                           }
-                          className="w-full text-sm"
+                          className="w-full text-sm text-gray-400"
                         />
 
                       </div>
@@ -1584,71 +1953,81 @@ const ManageProducts = () => {
 
                 </div>
 
-
                 {/* =====================================================
                     COLORS & SIZES
                 ===================================================== */}
-                <div className="border-t pt-8">
+                <div className="border-t border-gray-800 pt-8">
 
                   <div className="mb-5">
 
-                    <h3 className="text-xl font-bold text-gray-800">
+                    <h3 className="text-xl font-bold text-white">
                       Colors & Sizes
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Manage product colors, color images and available
-                      sizes.
+                      Manage product colors, color images and sizes.
                     </p>
 
                   </div>
 
-                  <div className="border border-orange-200 bg-orange-50 p-6 rounded-3xl">
+                  <div className="border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4 sm:p-6 rounded-3xl">
 
                     {colors.length === 0 && (
-                      <div className="bg-white border border-dashed border-orange-300 rounded-2xl p-8 text-center mb-5">
 
-                        <p className="text-gray-500">
+                      <div className="bg-black border border-dashed border-[#D4AF37]/40 rounded-2xl p-8 text-center mb-5">
+
+                        <div className="text-3xl mb-3">
+                          🎨
+                        </div>
+
+                        <p className="text-gray-400">
                           No colors added to this product.
                         </p>
 
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-600 mt-1">
                           Click "Add New Color" below to add one.
                         </p>
 
                       </div>
+
                     )}
 
                     {colors.map((color, cIndex) => (
 
                       <div
                         key={cIndex}
-                        className="bg-white p-6 rounded-2xl mb-6 border border-gray-200"
+                        className="
+                          bg-[#0b0b0b]
+                          p-4 sm:p-6
+                          rounded-2xl
+                          mb-6
+                          border border-gray-700
+                        "
                       >
 
-                        {/* ================= COLOR HEADER ================= */}
+                        {/* Color Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
 
-                        <div className="flex items-center justify-between mb-5">
-
-                          <h4 className="text-lg font-bold text-gray-800">
+                          <h4 className="text-lg font-bold text-white">
                             Color {cIndex + 1}
                           </h4>
 
                           {color.id && (
-                            <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+
+                            <span className="text-xs bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] px-3 py-1 rounded-full">
                               Existing Color #{color.id}
                             </span>
+
                           )}
 
                         </div>
 
-                        {/* ================= COLOR NAME + CODE ================= */}
-
+                        {/* Name + Code */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                          {/* Color Name */}
-                          <div className="w-full">
-                            <label className="block text-sm font-medium text-[#17365D] mb-2">
+                          <div>
+
+                            <label className="block text-sm font-semibold text-gray-300 mb-2">
                               Color Name *
                             </label>
 
@@ -1662,24 +2041,38 @@ const ManageProducts = () => {
                                   e.target.value
                                 )
                               }
-                              className="w-full h-[56px] border border-gray-300 rounded-[4px] px-4 focus:outline-none focus:border-blue-500"
+                              className="
+                                w-full
+                                bg-black
+                                border border-gray-700
+                                text-white
+                                rounded-xl
+                                px-4 py-3
+                                outline-none
+                                focus:border-[#D4AF37]
+                                focus:ring-2
+                                focus:ring-[#D4AF37]/20
+                              "
                               placeholder="Example: Red"
                               required
                             />
+
                           </div>
 
-                          {/* Color Code */}
-                          <div className="w-full">
-                            <label className="block text-sm font-medium text-[#17365D] mb-2">
+                          <div>
+
+                            <label className="block text-sm font-semibold text-gray-300 mb-2">
                               Color Code *
                             </label>
 
-                            <div className="h-[56px] w-full border border-gray-300 rounded-[4px] flex items-center px-3 gap-3">
+                            <div className="h-[50px] w-full border border-gray-700 rounded-xl flex items-center px-3 gap-3 bg-black">
 
-                              {/* Color Picker */}
                               <input
                                 type="color"
-                                value={color.code || "#000000"}
+                                value={
+                                  color.code ||
+                                  "#000000"
+                                }
                                 onChange={(e) =>
                                   handleColorChange(
                                     cIndex,
@@ -1687,28 +2080,26 @@ const ManageProducts = () => {
                                     e.target.value
                                   )
                                 }
-                                className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
+                                className="w-9 h-9 p-0 border-0 rounded cursor-pointer bg-transparent"
                               />
 
-                              {/* Hex Code */}
-                              <span className="text-sm text-gray-600 font-mono">
-                                {color.code || "#000000"}
+                              <span className="text-sm text-[#D4AF37] font-mono">
+                                {color.code ||
+                                  "#000000"}
                               </span>
 
                             </div>
+
                           </div>
 
                         </div>
 
-                        {/* =================================================
-                            EXISTING COLOR IMAGES
-                        ================================================= */}
-
+                        {/* Existing Images */}
                         {color.existingImages?.length > 0 && (
 
                           <div className="mt-6">
 
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            <label className="block text-sm font-semibold text-gray-300 mb-3">
                               Existing Color Images
                             </label>
 
@@ -1719,7 +2110,7 @@ const ManageProducts = () => {
 
                                   <div
                                     key={image.id}
-                                    className="w-24 h-24 rounded-xl overflow-hidden border bg-gray-50"
+                                    className="w-24 h-24 rounded-xl overflow-hidden border border-gray-700 bg-black"
                                   >
 
                                     <img
@@ -1739,14 +2130,10 @@ const ManageProducts = () => {
 
                         )}
 
-
-                        {/* =================================================
-                            ADD NEW COLOR IMAGES
-                        ================================================= */}
-
+                        {/* New Color Images */}
                         <div className="mt-6">
 
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-300 mb-2">
                             Add New Color Images
                           </label>
 
@@ -1760,7 +2147,7 @@ const ManageProducts = () => {
                                 cIndex
                               )
                             }
-                            className="w-full text-sm"
+                            className="w-full text-sm text-gray-400"
                           />
 
                           {color.images?.length > 0 && (
@@ -1780,7 +2167,7 @@ const ManageProducts = () => {
                                         image
                                       )}
                                       alt="New color"
-                                      className="w-20 h-20 object-cover rounded-xl border"
+                                      className="w-20 h-20 object-cover rounded-xl border border-[#D4AF37]/40"
                                     />
 
                                   </div>
@@ -1794,18 +2181,14 @@ const ManageProducts = () => {
 
                         </div>
 
+                        {/* Sizes */}
+                        <div className="mt-7 border-t border-gray-800 pt-6">
 
-                        {/* =================================================
-                            SIZES
-                        ================================================= */}
-
-                        <div className="mt-7 border-t pt-6">
-
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
 
                             <div>
 
-                              <h4 className="font-bold text-gray-800">
+                              <h4 className="font-bold text-white">
                                 Available Sizes
                               </h4>
 
@@ -1818,22 +2201,30 @@ const ManageProducts = () => {
                             <button
                               type="button"
                               onClick={() =>
-                                addColorSize(cIndex)
+                                addColorSize(
+                                  cIndex
+                                )
                               }
-                              className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                              className="
+                                text-sm
+                                font-semibold
+                                text-[#D4AF37]
+                                hover:text-white
+                                transition
+                              "
                             >
                               + Add Size
                             </button>
 
                           </div>
 
-
                           {color.sizes?.length === 0 && (
-                            <div className="text-sm text-gray-500 bg-gray-50 border border-dashed rounded-xl p-4 text-center">
+
+                            <div className="text-sm text-gray-500 bg-black border border-dashed border-gray-700 rounded-xl p-4 text-center">
                               No sizes added.
                             </div>
-                          )}
 
+                          )}
 
                           {color.sizes?.map(
                             (size, sIndex) => (
@@ -1843,10 +2234,9 @@ const ManageProducts = () => {
                                 className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
                               >
 
-                                {/* Size */}
                                 <div>
 
-                                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                  <label className="block text-xs font-semibold text-gray-400 mb-1">
                                     Size
                                   </label>
 
@@ -1861,16 +2251,25 @@ const ManageProducts = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
+                                    className="
+                                      w-full bg-black
+                                      border border-gray-700
+                                      text-white
+                                      rounded-xl
+                                      px-4 py-3
+                                      outline-none
+                                      focus:border-[#D4AF37]
+                                      focus:ring-2
+                                      focus:ring-[#D4AF37]/20
+                                    "
                                     placeholder="Example: M, L, XL"
                                   />
 
                                 </div>
 
-                                {/* Quantity */}
                                 <div>
 
-                                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                  <label className="block text-xs font-semibold text-gray-400 mb-1">
                                     Size Quantity
                                   </label>
 
@@ -1886,7 +2285,17 @@ const ManageProducts = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500"
+                                    className="
+                                      w-full bg-black
+                                      border border-gray-700
+                                      text-white
+                                      rounded-xl
+                                      px-4 py-3
+                                      outline-none
+                                      focus:border-[#D4AF37]
+                                      focus:ring-2
+                                      focus:ring-[#D4AF37]/20
+                                    "
                                     placeholder="Enter quantity"
                                   />
 
@@ -1903,38 +2312,56 @@ const ManageProducts = () => {
 
                     ))}
 
-
-                    {/* ================= ADD COLOR ================= */}
-
+                    {/* Add Color */}
                     <button
                       type="button"
                       onClick={addColor}
-                      className="w-full py-4 border-2 border-dashed border-orange-300 rounded-2xl text-orange-600 font-semibold hover:bg-orange-100 transition"
+                      className="
+                        w-full
+                        py-4
+                        border-2
+                        border-dashed
+                        border-[#D4AF37]/50
+                        rounded-2xl
+                        text-[#D4AF37]
+                        font-semibold
+                        hover:bg-[#D4AF37]/10
+                        hover:border-[#D4AF37]
+                        transition
+                      "
                     >
                       + Add New Color
                     </button>
 
                   </div>
+
                   {/* Product Availability */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="mt-6">
+
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
                       Product Availability
                     </label>
 
                     <div
-                      className={`flex items-center justify-between border rounded-xl px-4 py-3 transition ${formData.status
-                          ? "border-green-300 bg-green-50"
-                          : "border-red-300 bg-red-50"
-                        }`}
+                      className={`flex items-center justify-between border rounded-xl px-4 py-4 transition ${
+                        formData.status
+                          ? "border-[#D4AF37]/40 bg-[#D4AF37]/5"
+                          : "border-red-500/30 bg-red-500/5"
+                      }`}
                     >
+
                       <div>
+
                         <p
-                          className={`font-semibold ${formData.status
-                              ? "text-green-700"
-                              : "text-red-700"
-                            }`}
+                          className={`font-semibold ${
+                            formData.status
+                              ? "text-[#D4AF37]"
+                              : "text-red-400"
+                          }`}
                         >
-                          {formData.status ? "Available" : "Not Available"}
+                          {formData.status
+                            ? "Available"
+                            : "Not Available"}
                         </p>
 
                         <p className="text-xs text-gray-500 mt-1">
@@ -1942,6 +2369,7 @@ const ManageProducts = () => {
                             ? "Customers can purchase this product."
                             : "Customers cannot purchase this product."}
                         </p>
+
                       </div>
 
                       <button
@@ -1949,55 +2377,70 @@ const ManageProducts = () => {
                         onClick={() =>
                           setFormData({
                             ...formData,
-                            status: formData.status ? 0 : 1,
+                            status: formData.status
+                              ? 0
+                              : 1,
                           })
                         }
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${formData.status
-                            ? "bg-green-500"
-                            : "bg-gray-400"
-                          }`}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                          formData.status
+                            ? "bg-[#D4AF37]"
+                            : "bg-gray-700"
+                        }`}
                         aria-label="Toggle product availability"
                       >
+
                         <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${formData.status
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                            }`}
+                          className={`inline-block h-5 w-5 transform rounded-full shadow transition-transform ${
+                            formData.status
+                              ? "translate-x-6 bg-black"
+                              : "translate-x-1 bg-white"
+                          }`}
                         />
+
                       </button>
+
                     </div>
+
                   </div>
 
                 </div>
 
-
                 {/* =====================================================
                     FORM ACTIONS
                 ===================================================== */}
-
-                <div className="border-t pt-6 flex flex-col sm:flex-row justify-end gap-3">
+                <div className="border-t border-gray-800 pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditingProduct(null);
-                      setColors([]);
-
-                      setPreviews({
-                        image: null,
-                        image2: null,
-                        image3: null,
-                        image4: null,
-                      });
-                    }}
-                    className="px-7 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 transition"
+                    onClick={closeEditModal}
+                    className="
+                      px-7 py-3
+                      border border-gray-700
+                      rounded-xl
+                      text-gray-300
+                      font-semibold
+                      hover:border-[#D4AF37]
+                      hover:text-[#D4AF37]
+                      transition
+                    "
                   >
                     Cancel
                   </button>
 
                   <button
                     type="submit"
-                    className="px-8 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition"
+                    className="
+                      px-8 py-3
+                      bg-[#D4AF37]
+                      text-black
+                      rounded-xl
+                      font-bold
+                      hover:bg-[#b8941f]
+                      transition
+                      shadow-lg
+                      shadow-[#D4AF37]/10
+                    "
                   >
                     Update Product
                   </button>
@@ -2009,27 +2452,28 @@ const ManageProducts = () => {
             </div>
 
           </div>
+
         )}
 
-
-        {/* =========================================================
+        {/* =====================================================
             VIEW PRODUCT MODAL
-        ========================================================= */}
+        ===================================================== */}
         {viewProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
 
-            <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+
+            <div className="bg-[#0b0b0b] border border-[#D4AF37]/40 text-white w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden">
 
               {/* Header */}
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-5 flex items-center justify-between">
+              <div className="bg-black border-b border-[#D4AF37]/40 px-5 sm:px-6 py-5 flex items-center justify-between">
 
                 <div>
 
-                  <h3 className="text-xl font-bold">
+                  <h3 className="text-xl font-bold text-white">
                     Product Details
                   </h3>
 
-                  <p className="text-sm text-orange-100">
+                  <p className="text-sm text-[#D4AF37] mt-1">
                     Product ID: #{viewProduct.id}
                   </p>
 
@@ -2040,112 +2484,117 @@ const ManageProducts = () => {
                   onClick={() =>
                     setViewProduct(null)
                   }
-                  className="text-white text-2xl"
+                  className="
+                    w-10 h-10
+                    rounded-xl
+                    bg-gray-900
+                    border border-gray-700
+                    text-gray-300
+                    hover:text-[#D4AF37]
+                    hover:border-[#D4AF37]
+                    transition
+                  "
                 >
                   ✕
                 </button>
 
               </div>
 
-
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-85px)]">
 
                 {/* Product Image */}
                 <div className="flex justify-center mb-6">
 
-                  <img
-                    src={
-                      viewProduct.image
-                        ? `${process.env.REACT_APP_API_URL}/public/${viewProduct.image}`
-                        : "/placeholder.jpg"
-                    }
-                    alt={viewProduct.name}
-                    className="w-48 h-48 object-cover rounded-2xl border"
-                  />
+                  <div className="w-48 h-48 rounded-2xl overflow-hidden border border-[#D4AF37]/30 bg-black">
+
+                    <img
+                      src={
+                        viewProduct.image
+                          ? `${process.env.REACT_APP_API_URL}/public/${viewProduct.image}`
+                          : "/placeholder.jpg"
+                      }
+                      alt={viewProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+
+                  </div>
 
                 </div>
 
-
-                {/* Product Name */}
-                <h3 className="text-2xl font-bold text-gray-800">
+                {/* Name */}
+                <h3 className="text-2xl font-bold text-white">
                   {viewProduct.name}
                 </h3>
 
-
-                {/* mrp_price */}
-                <p className="text-2xl font-bold text-orange-600 mt-2">
-                  ₹{viewProduct.mrp_price}
+                {/* MRP */}
+                <p className="text-sm text-gray-500 line-through mt-3">
+                  MRP: ₹{viewProduct.mrp_price}
                 </p>
 
                 {/* Price */}
-                <p className="text-2xl font-bold text-orange-600 mt-2">
+                <p className="text-2xl font-bold text-[#D4AF37] mt-1">
                   ₹{viewProduct.price}
                 </p>
 
-
                 {/* Basic Information */}
-                <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
 
-                  <div className="bg-gray-50 rounded-xl p-4">
+                  {[
+                    {
+                      label: "Article Number",
+                      value:
+                        viewProduct.article_number ||
+                        "-",
+                    },
+                    {
+                      label: "HSN Code",
+                      value:
+                        viewProduct.hsn || "-",
+                    },
+                    {
+                      label: "Quantity",
+                      value:
+                        viewProduct.qty ?? 0,
+                    },
+                    {
+                      label: "Return Days",
+                      value: `${
+                        viewProduct.return_days ?? 0
+                      } days`,
+                    },
+                  ].map((item) => (
 
-                    <p className="text-xs text-gray-500">
-                      Article Number
-                    </p>
+                    <div
+                      key={item.label}
+                      className="
+                        bg-black
+                        border border-gray-800
+                        rounded-xl
+                        p-4
+                      "
+                    >
 
-                    <p className="font-semibold mt-1">
-                      {viewProduct.article_number || "-"}
-                    </p>
+                      <p className="text-xs text-gray-500">
+                        {item.label}
+                      </p>
 
-                  </div>
+                      <p className="font-semibold text-gray-200 mt-1">
+                        {item.value}
+                      </p>
 
+                    </div>
 
-                  <div className="bg-gray-50 rounded-xl p-4">
-
-                    <p className="text-xs text-gray-500">
-                      HSN Code
-                    </p>
-
-                    <p className="font-semibold mt-1">
-                      {viewProduct.hsn || "-"}
-                    </p>
-
-                  </div>
-
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-
-                    <p className="text-xs text-gray-500">
-                      Quantity
-                    </p>
-
-                    <p className="font-semibold mt-1">
-                      {viewProduct.qty ?? 0}
-                    </p>
-
-                  </div>
-
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-
-                    <p className="text-xs text-gray-500">
-                      Return Days
-                    </p>
-
-                    <p className="font-semibold mt-1">
-                      {viewProduct.return_days ?? 0} days
-                    </p>
-
-                  </div>
+                  ))}
 
                 </div>
 
-
                 {/* Description */}
                 {viewProduct.description && (
+
                   <div className="mt-6">
 
-                    <h4 className="font-bold text-gray-800 mb-2">
+                    <h4 className="font-bold text-[#D4AF37] mb-2">
                       Description
                     </h4>
 
@@ -2154,12 +2603,12 @@ const ManageProducts = () => {
                         __html:
                           viewProduct.description,
                       }}
-                      className="text-gray-600 leading-relaxed"
+                      className="text-gray-400 leading-relaxed"
                     />
 
                   </div>
-                )}
 
+                )}
 
                 {/* Close */}
                 <div className="flex justify-end mt-7">
@@ -2169,7 +2618,15 @@ const ManageProducts = () => {
                     onClick={() =>
                       setViewProduct(null)
                     }
-                    className="px-7 py-3 border border-gray-300 rounded-xl font-semibold hover:bg-gray-100"
+                    className="
+                      px-7 py-3
+                      bg-[#D4AF37]
+                      text-black
+                      rounded-xl
+                      font-bold
+                      hover:bg-[#b8941f]
+                      transition
+                    "
                   >
                     Close
                   </button>
@@ -2181,9 +2638,11 @@ const ManageProducts = () => {
             </div>
 
           </div>
+
         )}
 
       </div>
+
     </div>
   );
 };
